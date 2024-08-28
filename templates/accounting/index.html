@@ -1,0 +1,88 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/fontawesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.0.0/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="{% static 'css/accounting.css' %}">
+    <title>记录收支</title>
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <div class="container" id="top-container">
+        <ul class="nav nav-tabs justify-content-center" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-toggle="tab" href="#home">记账</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#charts">图表</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#info">关于</a>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <div id="home" class="container tab-pane active"><br>
+<!--                <h3>在这里记账</h3>-->
+<!--                <p>这里会展示资金账户和当月记账详细信息</p>-->
+                 <div class="row">
+                    <div class="col-lg-6 mb-6">
+                        <div id="month-overview" align="center">
+                            <span>当月结余</span>
+                            <h5>TBD</h5>
+                        </div>
+                        <div class="row">
+                            <div class="col" align="center">
+                                <span>当月收入</span>
+                                <h6>TBD</h6>
+                            </div>
+                            <div class="col" align="center">
+                                <span>当月支出</span>
+                                <h6>TBD</h6>
+                            </div>
+                        </div>
+                        <hr width="90%" style="border:1px solid #FFD700;"/>
+                        <div id="account-overview" align="center">
+                            {% for account in accounts %}
+                            <span>{{ account.name }}</span>
+                            <span>{{ account.amount }}</span>
+                            <hr width="60%"/>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-lg-6 mb-6" id="category-overview" align="center">
+                        <h5>当前类型列表</h5>
+                        <hr width="90%" style="border:1px solid #FFD700;"/>
+                        {% for sub_category in sub_categories %}
+                        <span>{{ sub_category.parent }}</span>
+                        <span>-></span>
+                        <span>{{ sub_category.name }}</span>
+                        <hr width="60%"/>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div id="charts" class="container tab-pane fade"><br>
+                <h3>在这里看图表分析</h3>
+                <p>这里会展示不同周期和不同类别的图表分析</p>
+            </div>
+            <div id="info" class="container tab-pane fade"><br>
+                <h3>关于</h3>
+                <p>这里会展示相关info</p>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="unauthenticated">
+        <h3>Please login to view data or record expense</h3>
+    </div>
+    {% endif %}
+</body>
+</html>
