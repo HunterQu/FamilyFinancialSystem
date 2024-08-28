@@ -10,6 +10,32 @@
     </head>
     <body>
 
+    <script type="text/javascript">
+        // 检查 success 变量是否存在并为 True
+        {% if success %}
+        alert('注册成功！');
+        {% endif %}
+
+        // 检查 exists 变量是否存在并为 True
+        {% if exists %}
+        alert('账号已存在，注册失败！');
+        {% endif %}
+
+        // 控制显示注册还是登录页面
+        window.onload = function() {
+            {% if show_register %}
+            document.getElementById('register').classList.add('is-show');
+            document.getElementById('login').classList.remove('is-show');
+            {% elif show_login %}
+            document.getElementById('login').classList.add('is-show');
+            document.getElementById('register').classList.remove('is-show');
+            {% else %}
+            document.getElementById('welcome').classList.add('is-show');
+            {% endif %}
+        };
+    </script>
+
+
             <div class="container">
 
                 <div class="card-wrap">

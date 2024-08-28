@@ -15,12 +15,14 @@ def register(request):
         pwd = request.POST.get('password', '')
 
         if User.objects.filter(username=user_name).exists():
-            return JsonResponse({'code': 200, 'msg': '用户已存在'})
+            # 用户已存在，返回注册页面并显示提示
+            return render(request, 'accounting/login.html', {'exists': True, 'show_register': True})
 
         user = User.objects.create_user(username=user_name, password=pwd, email=email)
         user.save()
 
-        return JsonResponse({'code': 200, 'msg': '用户注册成功'})
+        # 注册成功，返回登录页面并显示提示
+        return render(request, 'accounting/login.html', {'success': True, 'show_login': True})
 
     return JsonResponse({'code': 403, 'msg': '被禁止的请求'})
 
