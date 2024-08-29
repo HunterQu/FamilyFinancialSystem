@@ -1,0 +1,99 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>收入与支出图表</title>
+    <!-- 引入 ECharts 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@latest/dist/echarts.min.js"></script>
+</head>
+<body>
+    <!-- 折线图容器 -->
+    <div id="lineChart" style="width: 90%; height: 300px; border: 1px solid #eecc11; padding: 40px"></div>
+    
+    <!-- 饼状图容器 -->
+    <div id="pieChart" style="width: 600px; height: 400px; margin-top: 20px;"></div>
+
+    <script>
+        // 渲染折线图
+        var lineChart = echarts.init(document.getElementById("lineChart"));
+        var dates = {{ dates|safe }};
+        var incomeData = {{ income_data|safe }};
+        var expenseData = {{ expense_data|safe }};
+
+        var lineOption = {
+            title: {
+                text: '过去一周收入与支出情况'
+            },
+            tooltip: {
+                trigger: 'axis'
+            },
+            xAxis: {
+                type: 'category',
+                data: dates
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [
+                {
+                    name: '收入',
+                    data: incomeData,
+                    type: 'line'
+                },
+                {
+                    name: '支出',
+                    data: expenseData,
+                    type: 'line'
+                }
+            ]
+        };
+
+        lineChart.setOption(lineOption);
+
+        // 渲染饼状图
+        var pieChart = echarts.init(document.getElementById("pieChart"));
+
+        var categoriesIncome = {{ categories_income|safe }};
+        var amountsIncome = {{ amounts_income|safe }};
+        var incomeDataForPie = categoriesIncome.map(function(category, index) {
+            return { value: amountsIncome[index], name: category };
+        });
+
+        var categoriesExpense = {{ categories_expense|safe }};
+        var amountsExpense = {{ amounts_expense|safe }};
+        var expenseDataForPie = categoriesExpense.map(function(category, index) {
+            return { value: amountsExpense[index], name: category };
+        });
+
+        var pieOption = {
+            title: {
+                text: '收入与支出类别分布',
+                x: 'center'
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: '{a} <br/>{b} : {c} ({d}%)'
+            },
+            series: [
+                {
+                    name: '收入类别',
+                    type: 'pie',
+                    radius: '40%',
+                    center: ['25%', '60%'],
+                    data: incomeDataForPie
+                },
+                {
+                    name: '支出类别',
+                    type: 'pie',
+                    radius: '40%',
+                    center: ['75%', '60%'],
+                    data: expenseDataForPie
+                }
+            ]
+        };
+
+        pieChart.setOption(pieOption);
+    </script>
+</body>
+</html>

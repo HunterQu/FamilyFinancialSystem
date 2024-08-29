@@ -8,4 +8,5 @@ urlpatterns = [
     path('', views.index, name='index'), #收支记账主页面
     path('login/', views.login, name='login'),
     path('register/', register, name='register'),
+    path('charts/', views.charts_view, name='charts_view'),
 ]
