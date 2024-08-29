@@ -92,15 +92,16 @@
                             </p>
 
                             <p>或用邮箱登录</p>
-                            <form>
+                            <form method="POST" action="{% url 'login_in' %}">
+                                {% csrf_token %}
                                 <div class="form-group">
-                                    <input class="form-control" type="email" placeholder="邮箱" required="required">
+                                    <input class="form-control" type="email" placeholder="邮箱" required="required" name="username">
                                 </div>
                                 <div class="form-group">
-                                    <input class="form-control" type="password" placeholder="密码" required="required">
+                                    <input class="form-control" type="password" placeholder="密码" required="required" name="password">
                                 </div>
                                 <p><a href="#">忘记密码？</a></p>
-                                <button class="btn btn-lg">登录</button>
+                                <button class="btn btn-lg btn-login_in-r" type="submit">登录</button>
                             </form>
                         </div>
                         <button class="btn btn-back js-btn" data-target="welcome"><i class="fas fa-angle-left"></i></button>

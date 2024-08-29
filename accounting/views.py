@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import authenticate, logout
 
 #注册
 def register(request):
@@ -39,3 +40,33 @@ def index(request):
     return  render(request, 'accounting/index.html', context)
 def login(request):
     return  render(request, 'accounting/login.html')
+
+
+
+    #登录
+def login_in(request):
+    if request.method == 'GET':
+        return render(request, 'accounting/login.html')
+
+    elif request.method == 'POST':
+        user_name = request.POST.get('username', '')
+        pwd = request.POST.get('password', '')
+
+        user = authenticate(username=user_name, password=pwd)
+
+        if user:
+            if user.is_active:
+                auth_login(request, user)
+                return redirect('/accounting/')
+            else:
+                return JsonResponse({'code': 403, 'msg': '用户未激活'}, status=403)
+        else:
+            return JsonResponse({'code': 403, 'msg': '用户认证失败'}, status=403)
+
+    # 处理其他请求方法
+    return JsonResponse({'code': 405, 'msg': '方法不允许'}, status=405)
+
+
+def logout_(request):
+	logout(request)
+	return redirect('/accounting/login')
