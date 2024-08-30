@@ -7,8 +7,21 @@
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
       <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
       <link href="/static/css/xm.css" rel="stylesheet">
+
+      <style>
+        /* 样式定义 */
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .error-message .icon {
+            margin-right: 5px;
+        }
+      </style>
     </head>
     <body>
+
 
     <script type="text/javascript">
         // 检查 success 变量是否存在并为 True
@@ -23,6 +36,12 @@
 
         // 控制显示注册还是登录页面
         window.onload = function() {
+
+            {% if login_failed %}
+            document.getElementById('login').classList.add('is-show');
+            document.getElementById('register').classList.remove('is-show');
+            {% endif %}
+
             {% if show_register %}
             document.getElementById('register').classList.add('is-show');
             document.getElementById('login').classList.remove('is-show');
@@ -92,15 +111,31 @@
                             </p>
 
                             <p>或用邮箱登录</p>
-                            <form>
+
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <div class="alert alert-danger">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                            <form method="POST" action="{% url 'login_in' %}">
+                                {% csrf_token %}
                                 <div class="form-group">
-                                    <input class="form-control" type="email" placeholder="邮箱" required="required">
+                                    <input class="form-control" type="email" placeholder="邮箱" required="required" name="username">
                                 </div>
                                 <div class="form-group">
-                                    <input class="form-control" type="password" placeholder="密码" required="required">
+                                    <input class="form-control" type="password" placeholder="密码" required="required" name="password">
                                 </div>
                                 <p><a href="#">忘记密码？</a></p>
-                                <button class="btn btn-lg">登录</button>
+
+                                <!-- 在这里显示错误信息 -->
+                                {% if login_failed %}
+                                    <div class="error-message">
+                                        <span class="icon">⚠️</span>{{ msg }}
+                                    </div>
+                                {% endif %}
+                                <button class="btn btn-lg btn-login_in-r" type="submit">登录</button>
                             </form>
                         </div>
                         <button class="btn btn-back js-btn" data-target="welcome"><i class="fas fa-angle-left"></i></button>
