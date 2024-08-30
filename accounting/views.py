@@ -51,48 +51,61 @@ def charts_view(request):
     end_date = timezone.now()
     start_date = end_date - timedelta(days=7)
 
-    income_category = Category.objects.filter(category_type="收入")
-    expense_category = Category.objects.filter(category_type="支出")
+    # 获取收入和支出类别
+    income_category_ids = Category.objects.filter(category_type="收入").values_list('id', flat=True)
+    expense_category_ids = Category.objects.filter(category_type="支出").values_list('id', flat=True)
 
+    # 查询收入记录
     income_records = HistoryRecord.objects.filter(
-        category__in=income_category,
+        category_id__in=income_category_ids,
         time_of_occurrence__range=(start_date, end_date)
     ).values('time_of_occurrence__date').annotate(total_amount=Sum('amount')).order_by('time_of_occurrence__date')
 
+    # 查询支出记录
     expense_records = HistoryRecord.objects.filter(
-        category__in=expense_category,
+        category_id__in=expense_category_ids,
         time_of_occurrence__range=(start_date, end_date)
     ).values('time_of_occurrence__date').annotate(total_amount=Sum('amount')).order_by('time_of_occurrence__date')
 
     # 准备折线图数据，将 Decimal 转换为 float
-    dates = [record['time_of_occurrence__date'].strftime('%Y-%m-%d') for record in income_records]
-    income_data = [float(record['total_amount']) for record in income_records]
-    expense_data = [float(record['total_amount']) for record in expense_records]
+    income_dates = [record['time_of_occurrence__date'].strftime('%Y-%m-%d') for record in income_records]
+    income_values = [float(record['total_amount']) for record in income_records]
 
-    income_data_pie = HistoryRecord.objects.filter(
-        category__in=income_category,
+    expense_dates = [record['time_of_occurrence__date'].strftime('%Y-%m-%d') for record in expense_records]
+    expense_values = [float(record['total_amount']) for record in expense_records]
+
+    # 准备饼状图数据，将 Decimal 转换为 float
+    income_pie_data = HistoryRecord.objects.filter(
+        category_id__in=income_category_ids,
         time_of_occurrence__range=(start_date, end_date)
     ).values('category__name').annotate(total_amount=Sum('amount'))
 
-    expense_data_pie = HistoryRecord.objects.filter(
-        category__in=expense_category,
+    expense_pie_data = HistoryRecord.objects.filter(
+        category_id__in=expense_category_ids,
         time_of_occurrence__range=(start_date, end_date)
     ).values('category__name').annotate(total_amount=Sum('amount'))
 
-    categories_income = [record['category__name'] for record in income_data_pie]
-    amounts_income = [float(record['total_amount']) for record in income_data_pie]  # 转换为 float
+    income_pie = [
+        {'name': record['category__name'], 'value': float(record['total_amount'])}
+        for record in income_pie_data
+    ]
 
-    categories_expense = [record['category__name'] for record in expense_data_pie]
-    amounts_expense = [float(record['total_amount']) for record in expense_data_pie]  # 转换为 float
+    expense_pie = [
+        {'name': record['category__name'], 'value': float(record['total_amount'])}
+        for record in expense_pie_data
+    ]
 
     context = {
-        'dates': dates,
-        'income_data': income_data,
-        'expense_data': expense_data,
-        'categories_income': categories_income,
-        'amounts_income': amounts_income,
-        'categories_expense': categories_expense,
-        'amounts_expense': amounts_expense,
+        'income_dates': income_dates,
+        'income_values': income_values,
+        'expense_dates': expense_dates,
+        'expense_values': expense_values,
+        'income_pie': income_pie,
+        'expense_pie': expense_pie,
     }
 
     return render(request, 'accounting/charts.html', context)
+
+
+
+
