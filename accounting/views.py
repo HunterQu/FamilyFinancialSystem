@@ -130,8 +130,8 @@ def login_in(request):
         return render(request, 'accounting/login.html')
 
     elif request.method == 'POST':
-        user_name = request.POST.get('username', '')
-        pwd = request.POST.get('password', '')
+        user_name = request.POST.get('username')
+        pwd = request.POST.get('password')
 
         user = authenticate(username=user_name, password=pwd)
 
