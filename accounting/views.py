@@ -4,6 +4,8 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth import authenticate, logout
+from django.contrib import messages
+
 
 #注册
 def register(request):
@@ -59,9 +61,10 @@ def login_in(request):
                 auth_login(request, user)
                 return redirect('/accounting/')
             else:
-                return JsonResponse({'code': 403, 'msg': '用户未激活'}, status=403)
+                return render(request, 'accounting/login.html', {'login_failed': True, 'msg': '用户未激活'})
         else:
-            return JsonResponse({'code': 403, 'msg': '用户认证失败'}, status=403)
+            # 设置错误消息，并返回登录页面
+            return render(request, 'accounting/login.html', {'login_failed': True, 'msg': '账户名或密码错误，请重新登录'})
 
     # 处理其他请求方法
     return JsonResponse({'code': 405, 'msg': '方法不允许'}, status=405)
