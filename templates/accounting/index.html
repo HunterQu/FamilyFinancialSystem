@@ -11,6 +11,8 @@
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.0.0/dist/echarts.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/jquery-datetimepicker@2.5.21/build/jquery.datetimepicker.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/jquery-datetimepicker@2.5.21/build/jquery.datetimepicker.full.min.js"></script>
     <link rel="stylesheet" href="{% static 'css/accounting.css' %}">
     <title>记录收支</title>
 </head>
@@ -68,47 +70,58 @@
                         </div>
                     </div>
                     <div class="col-lg-8 mb-8" id="history-records-overview" align="center">
-                        <div class="form-row">
-                            <div class="col-md-4 mb-3">
-                                <select class="custom-select" id="ie-type-list">
-                                    {% for ie in ie_types %}
-                                    <option value="{{ ie.0 }}">{{ ie.1 }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <select class="custom-select" id="category-list">
-                                    {% for c in categories %}
-                                    <option value="{{ c.id }}">{{ c.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <select class="custom-select" id="sub-category-list">
-                                    {% for sc in sub_categories %}
-                                    <option value="{{ sc.id }}">{{ sc.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="col-md-5 mb-3">
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <select class="custom-select" id="currency-list">
-                                        {% for c in currencies %}
-                                        <option value="{{ c.id }}">{{ c.name }}</option>
+                         <form action="{% url 'record_income_expense' %}" method="post" class="history-record-form">
+                            {% csrf_token %}
+                            <div class="form-row">
+                                <div class="col-md-3 mb-3">
+                                    <select class="custom-select" id="account-list" name="account">
+                                        {% for a in accounts %}
+                                        <option value="{{ a.id }}">{{ a.name }}</option>
                                         {% endfor %}
-                                        </select>
-                                    </div>
-                                    <input type="text" aria-label="Money Amount" placeholder="金额" class="form-control">
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <select class="custom-select" id="ie-type-list">
+                                        {% for ie in ie_types %}
+                                        <option value="{{ ie.0 }}">{{ ie.1 }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <select class="custom-select" id="category-list" name="category">
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <select class="custom-select" id="sub-category-list" name="sub_category">
+                                    </select>
                                 </div>
                             </div>
-                            <div class="col-md-7 mb-3">
-                                <input type="text" aria-label="Comment" placeholder="备注" class="form-control">
+                            <div class="form-row">
+                                <div class="col-md-5 mb-3">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <select class="custom-select" id="currency-list" name="currency">
+                                            {% for c in currencies %}
+                                            <option value="{{ c.id }}">{{ c.name }}</option>
+                                            {% endfor %}
+                                            </select>
+                                        </div>
+                                        <input type="text" oninput="value=value.replace(/[^\d.]/g,'')" name="amount" aria-label="Money Amount" placeholder="金额" class="form-control" required="">
+                                    </div>
+                                </div>
+                                <div class="col-md-7 mb-3">
+                                    <input type="text" name="comment" aria-label="Comment" placeholder="备注" class="form-control">
+                                </div>
                             </div>
-                        </div>
-                        <button type="submit" class="btn btn-info btn-block">记录账单</button>
+                            <div class="form-row">
+                                <div class="col-md-4 mb-3">
+                                    <input id="time-occurrence" name="time_of_occurrence" type="text" class="form-control">
+                                </div>
+                                <div class="col-md-8 mb-3">
+                                    <button type="submit" class="btn btn-info btn-block">记录账单</button>
+                                </div>
+                            </div>
+                        </form>
                         <br>
                         <h5>当月账单列表</h5>
                         <hr width="90%" class="main-separator"/>
@@ -189,7 +202,7 @@
         var init_ie_type = 'expense'
         var init_category_type = '餐饮'
         $("#ie-type-list").find(`option[value=${init_ie_type}]`).attr("selected", true);
-        $.ajax({
+         $.ajax({
             type: "POST",
             data: {ie_type: init_ie_type},
             url: "{% url 'retrieve_category' %}",
@@ -198,12 +211,29 @@
             success: function (result) {
                 var options = "";
                 result["categories"].forEach(function(val,index,arr) {
-                    new_option = '<option value="' + val + '">' + val + '</option>';
+                    new_option = '<option value="' + val[0] + '">' + val[1] + '</option>';
                     options += new_option;
                 });
                 var category_list = document.getElementById("category-list");
                 category_list.innerHTML = options;
-                $("#category-list").find(`option[value=${init_category_type}]`).attr("selected", true);
+                $("#category-list option").filter(function(){return $(this).text()==init_category_type;}).attr("selected", true);
+            }
+        });
+
+        $.ajax({
+            type: "POST",
+            data: {category_type: init_category_type},
+            url: "{% url 'retrieve_subcategory' %}",
+            cache: false,
+            dataType: "json",
+            success: function (result) {
+                var options = '<option value="select value" selected="selected">选择子类</option>';
+                result["subcategories"].forEach(function(val,index,arr) {
+                    new_option = '<option value="' + val[0] + '">' + val[1] + '</option>';
+                    options += new_option;
+                });
+                var sub_category_list = document.getElementById("sub-category-list");
+                sub_category_list.innerHTML = options;
             }
         });
     })
@@ -222,20 +252,87 @@
                     var options = "";
                     result["categories"].forEach(function(val,index,arr) {
                         if (index == 0) {
-                            new_option = '<option value="' + val + '" selected="selected">' + val + '</option>';
+                            new_option = '<option value="' + val[0] + '" selected="selected">' + val[1] + '</option>';
                             options += new_option;
                         }
                         else {
-                            new_option = '<option value="' + val + '">' + val + '</option>';
+                            new_option = '<option value="' + val[0] + '">' + val[1] + '</option>';
                             options += new_option;
                         }
                     });
                     var category_list = document.getElementById("category-list");
                     category_list.innerHTML = options;
+
+                    var current_category_type = $('#category-list').children('option:selected').text();
+                    $.ajax({
+                        type: "POST",
+                        data: {category_type: current_category_type},
+                        url: "{% url 'retrieve_subcategory' %}",
+                        cache: false,
+                        dataType: "json",
+                        success: function (result) {
+                            var options = '<option value="select value" selected="selected">选择子类</option>';
+                            result["subcategories"].forEach(function(val,index,arr) {
+                                new_option = '<option value="' + val[0] + '">' + val[1] + '</option>';
+                                options += new_option;
+                            });
+                            var sub_category_list = document.getElementById("sub-category-list");
+                            sub_category_list.innerHTML = options;
+                        }
+                    });
+                }
+            });
+        });
+        $('#category-list').change(function(){
+            var current_category_type = $(this).children('option:selected').text();
+            $.ajax({
+                type: "POST",
+                data: {category_type: current_category_type},
+                url: "{% url 'retrieve_subcategory' %}",
+                cache: false,
+                dataType: "json",
+                success: function (result) {
+                    var options = '<option value="select value" selected="selected">选择子类</option>';
+                    result["subcategories"].forEach(function(val,index,arr) {
+                        new_option = '<option value="' + val[0] + '">' + val[1] + '</option>';
+                        options += new_option;
+                    });
+                    var sub_category_list = document.getElementById("sub-category-list");
+                    sub_category_list.innerHTML = options;
                 }
             });
         });
     })
+</script>
+<script>
+    function getCurrentDateFormat() {
+        var date = new Date();
+        var year = date.getFullYear();
+        var month = date.getMonth() + 1;
+        var day = date.getDate();
+        var hour = date.getHours();
+        var minute = date.getMinutes();
+        if (month >= 1 && month <= 9) {
+            month = '0' + month;
+        }
+        if (day >= 0 && day <= 9) {
+            day = '0' + day;
+        }
+        if (hour >= 0 && hour <= 9) {
+            hour = '0' + hour;
+        }
+        if (minute >= 0 && minute <= 9) {
+            minute = '0' + minute;
+        }
+        var currentDate = year + '-' + month + '-' + day + " " + hour + ":" + minute;
+        return currentDate;
+    }
+</script>
+<script>
+    $("#time-occurrence").attr("value", getCurrentDateFormat());
+    $("#time-occurrence").datetimepicker( {
+        format:'Y-m-d H:i',
+    });
 </script>
 <script>
     $(function () {
