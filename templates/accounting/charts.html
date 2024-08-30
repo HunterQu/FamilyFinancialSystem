@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>收入与支出图表</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@latest/dist/echarts.min.js"></script>
+</head>
+<body>
+    <!-- 折线图容器 -->
+    <div id="lineChart" style="width: 90%; height: 300px; border: 1px solid #eecc11; padding: 40px"></div>
+
+    <!-- 饼状图容器（收入） -->
+    <div id="pieChartIncome" style="width: 600px; height: 400px; margin-top: 20px;"></div>
+
+    <!-- 饼状图容器（支出） -->
+    <div id="pieChartExpense" style="width: 600px; height: 400px; margin-top: 20px;"></div>
+
+    <script>
+        // 渲染折线图
+        var lineChart = echarts.init(document.getElementById("lineChart"));
+
+        var incomeDates = {{ income_dates|safe }};
+        var incomeValues = {{ income_values|safe }};
+
+        var expenseDates = {{ expense_dates|safe }};
+        var expenseValues = {{ expense_values|safe }};
+
+        var lineOption = {
+            title: {
+                text: '过去一周收入与支出情况'
+            },
+            tooltip: {
+                trigger: 'axis'
+            },
+            legend: {
+                data: ['收入', '支出']
+            },
+            xAxis: {
+                type: 'category',
+                data: [...new Set(incomeDates.concat(expenseDates))]  // 合并日期并去重
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [
+                {
+                    name: '收入',
+                    data: incomeValues,
+                    type: 'line'
+                },
+                {
+                    name: '支出',
+                    data: expenseValues,
+                    type: 'line'
+                }
+            ]
+        };
+
+        lineChart.setOption(lineOption);
+
+        // 渲染饼状图（收入）
+        var pieChartIncome = echarts.init(document.getElementById("pieChartIncome"));
+        var incomePieData = {{ income_pie|safe }};
+        var pieOptionIncome = {
+            title: {
+                text: '收入类别分布',
+                x: 'center'
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: '{a} <br/>{b} : {c} ({d}%)'
+            },
+            series : [{
+                name: '收入类别',
+                type: 'pie',
+                radius: '55%',
+                center: ['50%', '60%'],
+                data: incomePieData
+            }]
+        };
+
+        pieChartIncome.setOption(pieOptionIncome);
+
+        // 渲染饼状图（支出）
+        var pieChartExpense = echarts.init(document.getElementById("pieChartExpense"));
+        var expensePieData = {{ expense_pie|safe }};
+        var pieOptionExpense = {
+            title: {
+                text: '支出类别分布',
+                x: 'center'
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: '{a} <br/>{b} : {c} ({d}%)'
+            },
+            series : [{
+                name: '支出类别',
+                type: 'pie',
+                radius: '55%',
+                center: ['50%', '60%'],
+                data: expensePieData
+            }]
+        };
+
+        pieChartExpense.setOption(pieOptionExpense);
+    </script>
+</body>
+</html>
