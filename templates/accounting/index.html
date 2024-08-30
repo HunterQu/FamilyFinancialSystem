@@ -16,19 +16,19 @@
 </head>
 <body>
     {% if user.is_authenticated %}
-    <div class="container-xxl" id="top-container">
+    <div class="container" id="top-container">
         <ul class="nav nav-tabs justify-content-center" role="tablist">
             <li class="nav-item">
-                <a class="nav-link active" data-toggle="tab" href="#home">记账</a>
+                <a class="nav-link active" data-toggle="tab" href="#home" id="home-nav">记账</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#charts">图表</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#info">关于</a>
+                <a class="nav-link" data-toggle="tab" href="#info" id="info-nav">关于</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#worker">worker</a>
+                <a class="nav-link" data-toggle="tab" href="#worker" id="worker-nav">worker</a>
             </li>
         </ul>
 
@@ -37,7 +37,7 @@
 <!--                <h3>在这里记账</h3>-->
 <!--                <p>这里会展示资金账户和当月记账详细信息</p>-->
                  <div class="row">
-                    <div class="col-lg-6 mb-6">
+                    <div class="col-lg-4 mb-4">
                         <div id="month-overview" align="center">
                             <span>当月结余</span>
                             <h5>TBD</h5>
@@ -54,24 +54,64 @@
                         </div>
                         <hr width="90%" style="border:1px solid #FFD700;"/>
                         <div id="account-overview" align="center">
-                            {% for account in accounts %}
-                            <span>{{ account.name }}</span>
-                            <span>{{ account.icon }}</span>
-                            <span>{{ account.amount }}</span>
-                            <hr width="60%"/>
-                            {% endfor %}
+                            <ul class="list-group">
+                                {% for account in accounts %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {% if account.amount > 0 %}
+                                    <span><i>{{ account.icon }}</i>&ensp;{{ account.name }}</span><span class="badge badge-pill badge-success">{{ account.amount }}</span>
+                                    {% else %}
+                                    <span><i>{{ account.icon }}</i>&ensp;{{ account.name }}</span><span class="badge badge-pill badge-danger">{{ account.amount }}</span>
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
                         </div>
                     </div>
-                    <div class="col-lg-6 mb-6" id="category-overview" align="center">
-                        <h5>当前类型列表</h5>
-                        <hr width="90%" style="border:1px solid #FFD700;"/>
-                        {% for sub_category in sub_categories %}
-                        <span>{{ sub_category.parent }}</span>
-                        <span>-></span>
-                        <span>{{ sub_category.name }}</span>
-                        <span>{{ sub_category.icon }}</span>
-                        <hr width="60%"/>
-                        {% endfor %}
+                    <div class="col-lg-8 mb-8" id="history-records-overview" align="center">
+                        <div class="form-row">
+                            <div class="col-md-4 mb-3">
+                                <select class="custom-select" id="ie-type-list">
+                                    {% for ie in ie_types %}
+                                    <option value="{{ ie.0 }}">{{ ie.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <select class="custom-select" id="category-list">
+                                    {% for c in categories %}
+                                    <option value="{{ c.id }}">{{ c.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <select class="custom-select" id="sub-category-list">
+                                    {% for sc in sub_categories %}
+                                    <option value="{{ sc.id }}">{{ sc.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col-md-5 mb-3">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <select class="custom-select" id="currency-list">
+                                        {% for c in currencies %}
+                                        <option value="{{ c.id }}">{{ c.name }}</option>
+                                        {% endfor %}
+                                        </select>
+                                    </div>
+                                    <input type="text" aria-label="Money Amount" placeholder="金额" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-7 mb-3">
+                                <input type="text" aria-label="Comment" placeholder="备注" class="form-control">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-info btn-block">记录账单</button>
+                        <br>
+                        <h5>当月账单列表</h5>
+                        <hr width="90%" class="main-separator"/>
                     </div>
                 </div>
             </div>
@@ -141,6 +181,70 @@
         <h3>Please login to view data or record expense</h3>
     </div>
     {% endif %}
-<script src="/static/js/card.js"></script>
 </body>
+<script src="/static/js/card.js"></script>
+<script>$.ajaxSetup({headers: {"X-CSRFToken": '{{ csrf_token }}'}});</script>
+<script>
+    $(function () {
+        var init_ie_type = 'expense'
+        var init_category_type = '餐饮'
+        $("#ie-type-list").find(`option[value=${init_ie_type}]`).attr("selected", true);
+        $.ajax({
+            type: "POST",
+            data: {ie_type: init_ie_type},
+            url: "{% url 'retrieve_category' %}",
+            cache: false,
+            dataType: "json",
+            success: function (result) {
+                var options = "";
+                result["categories"].forEach(function(val,index,arr) {
+                    new_option = '<option value="' + val + '">' + val + '</option>';
+                    options += new_option;
+                });
+                var category_list = document.getElementById("category-list");
+                category_list.innerHTML = options;
+                $("#category-list").find(`option[value=${init_category_type}]`).attr("selected", true);
+            }
+        });
+    })
+</script>
+<script>
+    $(function () {
+        $('#ie-type-list').change(function(){
+            var current_ie_type = $(this).children('option:selected').val();
+            $.ajax({
+                type: "POST",
+                data: {ie_type: current_ie_type},
+                url: "{% url 'retrieve_category' %}",
+                cache: false,
+                dataType: "json",
+                success: function (result) {
+                    var options = "";
+                    result["categories"].forEach(function(val,index,arr) {
+                        if (index == 0) {
+                            new_option = '<option value="' + val + '" selected="selected">' + val + '</option>';
+                            options += new_option;
+                        }
+                        else {
+                            new_option = '<option value="' + val + '">' + val + '</option>';
+                            options += new_option;
+                        }
+                    });
+                    var category_list = document.getElementById("category-list");
+                    category_list.innerHTML = options;
+                }
+            });
+        });
+    })
+</script>
+<script>
+    $(function () {
+        $('#home-nav').click(function(){
+                $("#top-container").attr("class", "container");
+        });
+        $('#worker-nav').click(function(){
+                $("#top-container").attr("class", "container-fluid");
+        });
+    })
+</script>
 </html>

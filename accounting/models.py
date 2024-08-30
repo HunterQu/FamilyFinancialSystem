@@ -33,8 +33,8 @@ class Account(models.Model): #账户类型，如支付宝余额、余额宝余�
 
 class Category(models.Model): #记录大类
     CATEGORY_TYPES = (
-       ("收入", "income"),
-       ("支出", "expense")
+       ("income", "收入"),
+       ("expense", "支出")
     )
     name = models.CharField(max_length=100)
     icon = models.CharField(max_length=100)

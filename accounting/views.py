@@ -33,13 +33,27 @@ def register(request):
 from .models import *
 def index(request):
     all_accounts = Account.objects.all()
+    categories = Category.objects.all()
     sub_categories = SubCategory.objects.all()
+    currencies = Currency.objects.all()
+    ie_types = []
+    for t in Category.CATEGORY_TYPES:
+        ie_types.append(t)
     context = {
         'accounts': all_accounts,
-        'sub_categories': sub_categories
+        'categories': categories,
+        'sub_categories': sub_categories,
+        'currencies': currencies,
+        'ie_types': ie_types
     }
-    print(context)
-    return  render(request, 'accounting/index.html', context)
+    return render(request, 'accounting/index.html', context)
+def retrieve_category(request):
+    ie_type = request.POST.get('ie_type')
+    categories = Category.objects.filter(category_type=ie_type)
+    category_list = []
+    for c in categories:
+        category_list.append(c.name)
+    return JsonResponse({"categories": category_list})
 def login(request):
     return  render(request, 'accounting/login.html')
 

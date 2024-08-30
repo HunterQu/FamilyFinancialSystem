@@ -9,4 +9,5 @@ urlpatterns = [
     path('login/', views.login_in, name='login_in'),  # 登录
     path('register/', register, name='register'),
     path('logout/', views.logout_, name='logout_'),
+    path('retrieve_category/', views.retrieve_category, name='retrieve_category'),
 ]
