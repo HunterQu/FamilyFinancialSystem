@@ -1,9 +1,10 @@
 from django.db import models
 from django.utils import timezone
 
-
 class NormalUser(models.Model): #用户名称
     name = models.CharField(max_length=100)
+    def __str__(self):
+        return self.name
 
 class Currency(models.Model): #货币种类
     name = models.CharField("货币名称", max_length=100)
@@ -17,6 +18,7 @@ class Currency(models.Model): #货币种类
 
 
 class Account(models.Model): #账户类型，如支付宝余额、余额宝余额、银行卡余额等
+    owner = models.ForeignKey(NormalUser, on_delete=models.SET_NULL, null=True)
     name = models.CharField("账户类型名", max_length=100)
     amount = models.DecimalField("账户余额" ,max_digits=8, decimal_places=2)
     currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True, default=1)

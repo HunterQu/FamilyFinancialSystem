@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect
-
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.contrib.auth.models import User
+import datetime
+
 from .forms import HistoryRecordForm
 import decimal
 from django.contrib.auth import authenticate, login as auth_login
@@ -35,52 +36,98 @@ def register(request):
 
 from .models import *
 def index(request):
-    all_accounts = Account.objects.all()
-    categories = Category.objects.all()
-    sub_categories = SubCategory.objects.all()
-    currencies = Currency.objects.all()
-    ie_types = []
-    for t in Category.CATEGORY_TYPES:
-        ie_types.append(t)
-    context = {
-        'accounts': all_accounts,
-        'categories': categories,
-        'sub_categories': sub_categories,
-        'currencies': currencies,
-        'ie_types': ie_types
-    }
-    return render(request, 'accounting/index.html', context)
+    if request.user.is_authenticated:
+        today = datetime.date.today()
+        cur_user = NormalUser.objects.filter(name=request.user)[0]
+        all_accounts = Account.objects.filter(owner=cur_user)
+        currencies = Currency.objects.all()
+        history_records = HistoryRecord.objects.filter(username=cur_user ,time_of_occurrence__year=today.year, time_of_occurrence__month=today.month).order_by("-time_of_occurrence")
+        ie_types = Category.CATEGORY_TYPES
+
+        income = 0
+        expense = 0
+        day_has_record = []
+        current_month_records = {}
+        day_income_expense = {}
+
+        for hr in history_records:
+            if hr.category.category_type.lower() == "expense":
+                expense -= hr.amount
+            elif hr.category.category_type.lower() == "income":
+                income += hr.amount
+            day_occur = hr.time_of_occurrence.strftime("%Y-%m-%d %A")
+            if day_occur not in day_has_record:
+                day_has_record.append(day_occur)
+                current_month_records[day_occur] = [hr]
+                day_income_expense[day_occur] = {"income": 0, "expense": 0}
+                if hr.category.category_type.lower() == "expense":
+                    day_income_expense[day_occur]["expense"] += hr.amount
+                elif hr.category.category_type.lower() == "income":
+                    day_income_expense[day_occur]["income"] += hr.amount
+            else:
+                current_month_records[day_occur].append(hr)
+                if hr.category.category_type.lower() == "expense":
+                    day_income_expense[day_occur]["expense"] += hr.amount
+                elif hr.category.category_type.lower() == "income":
+                    day_income_expense[day_occur]["income"] += hr.amount
+        day_has_record.sort(reverse=True)
+
+        context = {
+            'accounts': all_accounts,
+            'currencies': currencies,
+            'ie_types': ie_types,
+            'day_has_record': day_has_record,
+            'history_records': history_records,
+            'current_month_income': income,
+            'current_month_expense': expense,
+            'surplus': income + expense,
+            'current_month_records': current_month_records,
+            'day_income_expense': day_income_expense
+        }
+        return render(request, 'accounting/index.html', context)
+    else:
+        return render(request, 'accounting/index.html')
+
 def retrieve_category(request):
-    ie_type = request.POST.get('ie_type')
-    categories = Category.objects.filter(category_type=ie_type)
-    category_list = []
-    for c in categories:
-        category_list.append((c.id, c.name))
-    # return HttpResponse(f'{"categories": {categories}}', content_type='application/json')
-    return JsonResponse({"categories": category_list})
+    if request.user.is_authenticated:
+        ie_type = request.POST.get('ie_type')
+        categories = Category.objects.filter(category_type=ie_type)
+        category_list = []
+        for c in categories:
+            category_list.append((c.id, c.name))
+        # return HttpResponse(f'{"categories": {categories}}', content_type='application/json')
+        return JsonResponse({"categories": category_list})
+    else:
+        return JsonResponse({"error": "unauthenticated"})
 
 def retrieve_subcategory(request):
-    category_type = request.POST.get('category_type')
-    current_category = Category.objects.filter(name=category_type)[0]
-    subcategories = SubCategory.objects.filter(parent=current_category)
-    subcategory_list = []
-    for sc in subcategories:
-        subcategory_list.append((sc.id, sc.name))
-    return JsonResponse({"subcategories": subcategory_list})
+    if request.user.is_authenticated:
+        category_type = request.POST.get('category_type')
+        current_category = Category.objects.filter(name=category_type)[0]
+        subcategories = SubCategory.objects.filter(parent=current_category)
+        subcategory_list = []
+        for sc in subcategories:
+            subcategory_list.append((sc.id, sc.name))
+        return JsonResponse({"subcategories": subcategory_list})
+    else:
+        return JsonResponse({"error": "unauthenticated"})
 
 def record_income_expense(request):
     if request.user.is_authenticated:
         sub_category = request.POST.get('sub_category')
         time_now = timezone.now()
+        print(request.user)
         if sub_category == "select value":
             try:
+                username = NormalUser.objects.filter(name=request.user)[0]
                 account = request.POST.get('account')
                 category = request.POST.get('category')
                 currency = request.POST.get('currency')
                 amount = request.POST.get('amount')
                 comment = request.POST.get('comment')
                 time_occur = request.POST.get('time_of_occurrence')
-                history_record = HistoryRecord(account_id=account,
+                history_record = HistoryRecord(username=username,
+                                               account_id=account,
                                                category_id=category,
                                                currency_id=currency,
                                                amount=amount,
@@ -102,6 +149,7 @@ def record_income_expense(request):
         else:
             form = HistoryRecordForm(request.POST)
             if form.is_valid():
+                username = NormalUser.objects.filter(name=request.user)[0]
                 account = form.cleaned_data['account']
                 category = form.cleaned_data['category']
                 sub_category = form.cleaned_data['sub_category']
@@ -109,7 +157,8 @@ def record_income_expense(request):
                 amount = form.cleaned_data['amount']
                 comment = form.cleaned_data['comment']
                 time_occur = form.cleaned_data['time_of_occurrence']
-                history_record = HistoryRecord(account=account,
+                history_record = HistoryRecord(username=username,
+                                               account=account,
                                                category=category,
                                                sub_category=sub_category,
                                                currency=currency,
