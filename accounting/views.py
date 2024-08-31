@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.db.models import Sum, Q
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.contrib.auth.models import User
@@ -72,6 +73,81 @@ def index(request):
                     day_income_expense[day_occur]["income"] += hr.amount
         day_has_record.sort(reverse=True)
 
+        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>分析数据获取<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        food_category_name = "饮食"
+
+        # 获取收入和支出类别的所有记录
+        income_records = HistoryRecord.objects.filter(category__category_type="income")
+        expense_records = HistoryRecord.objects.filter(category__category_type="expense")
+
+        # 获取总收入金额
+        total_income = income_records.aggregate(total=Sum('amount'))['total'] or 0
+
+        # 获取总支出金额
+        total_expense = expense_records.aggregate(total=Sum('amount'))['total'] or 0
+
+        # 获取饮食类别的所有支出记录
+        food_expense_records = expense_records.filter(
+	        Q(category__name=food_category_name) | Q(sub_category__parent__name=food_category_name)
+        )
+
+        # 获取饮食支出的总金额
+        food_expense_total = food_expense_records.aggregate(total=Sum('amount'))['total'] or 0
+
+        # 计算饮食支出占总支出的比例
+        if total_expense > 0:
+	        food_expense_ratio = (food_expense_total / total_expense) * 100
+        else:
+	        food_expense_ratio = 0
+
+        # 计算结余或赤字
+        balance = total_income - total_expense
+        if balance > 0:
+	        suggestion = f"你的收入大于支出，结余金额为：{balance:.2f}元。建议你继续保持储蓄习惯。"
+        else:
+	        suggestion = f"你的支出大于收入，赤字金额为：{abs(balance):.2f}元。建议你控制支出。"
+
+        # 生活质量评估
+        if food_expense_ratio > 60:
+	        quality_evaluation = "生活品质较差"
+        elif 50 < food_expense_ratio <= 60:
+	        quality_evaluation = "生活品质一般"
+        elif 40 < food_expense_ratio <= 50:
+	        quality_evaluation = "生活品质较好"
+        else:
+	        quality_evaluation = "生活品质优秀"
+        car_loan_category_name = "车贷"
+        house_loan_category_name = "房贷"
+        investment_category_name = "理财"
+
+        # 获取车贷和房贷的支出记录
+        car_loan_expense_records = expense_records.filter(
+	        Q(category__name=car_loan_category_name) | Q(sub_category__parent__name=car_loan_category_name)
+        )
+        house_loan_expense_records = expense_records.filter(
+	        Q(category__name=house_loan_category_name) | Q(sub_category__parent__name=house_loan_category_name)
+        )
+
+        # 获取车贷和房贷的总支出金额
+        car_loan_expense_total = car_loan_expense_records.aggregate(total=Sum('amount'))['total'] or 0
+        house_loan_expense_total = house_loan_expense_records.aggregate(total=Sum('amount'))['total'] or 0
+
+        # 获取理财产品投资记录
+        investment_records = HistoryRecord.objects.filter(
+	        Q(category__name=investment_category_name) | Q(sub_category__parent__name=investment_category_name)
+        )
+
+        # 获取理财产品投资的总金额
+        investment_total = investment_records.aggregate(total=Sum('amount'))['total'] or 0
+
+        # 计算车贷、房贷支出占总支出的比例
+        if total_expense > 0:
+	        car_loan_ratio = (car_loan_expense_total / total_expense) * 100
+	        house_loan_ratio = (house_loan_expense_total / total_expense) * 100
+        else:
+	        car_loan_ratio = 0
+	        house_loan_ratio = 0
+
         context = {
             'accounts': all_accounts,
             'currencies': currencies,
@@ -82,7 +158,13 @@ def index(request):
             'current_month_expense': expense,
             'surplus': income + expense,
             'current_month_records': current_month_records,
-            'day_income_expense': day_income_expense
+            'day_income_expense': day_income_expense,
+	        'food_expense_ratio': f"{food_expense_ratio:.2f}%",
+	        'quality_evaluation': quality_evaluation,
+	        'suggestion': suggestion,
+	        'car_loan_ratio': f"{car_loan_ratio:.2f}%",
+	        'house_loan_ratio': f"{house_loan_ratio:.2f}%",
+	        'investment_total': f"{investment_total:.2f}",
         }
         return render(request, 'accounting/index.html', context)
     else:
@@ -116,7 +198,7 @@ def record_income_expense(request):
     if request.user.is_authenticated:
         sub_category = request.POST.get('sub_category')
         time_now = timezone.now()
-        print(request.user)
+        # print(request.user)
         if sub_category == "select value":
             try:
                 username = NormalUser.objects.filter(name=request.user)[0]

@@ -27,7 +27,7 @@
                 <a class="nav-link" data-toggle="tab" href="#charts">图表</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#info" id="info-nav">关于</a>
+                <a class="nav-link" data-toggle="tab" href="#info" id="info-nav">分析</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#worker" id="worker-nav">worker</a>
@@ -179,8 +179,80 @@
                 <p>这里会展示不同周期和不同类别的图表分析</p>
             </div>
             <div id="info" class="container tab-pane fade"><br>
-                <h3>关于</h3>
-                <p>这里会展示相关info</p>
+                <br>
+                <h3 style="text-align: center;">月度账单分析</h3>
+                <br>
+                <br>
+                <br>
+
+                <style>
+        /* 卡片1的渐变背景颜色 */
+        .card-gradient-1 {
+            background: linear-gradient(to top, #30cfd0 0%, #330867 100%);
+            color: white;
+            transition: transform 0.35s ease-in-out;
+        }
+
+        /* 卡片2的渐变背景颜色 */
+        .card-gradient-2 {
+            background-image: linear-gradient(to right, #eea2a2 0%, #bbc1bf 19%, #57c6e1 42%, #b49fda 79%, #7ac5d8 100%);
+            color: white;
+            transition: transform 0.35s ease-in-out;
+        }
+
+        /* 卡片3的渐变背景颜色 */
+        .card-gradient-3 {
+            background: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%); /* 渐变从橙色到红色 */
+            color: white;
+            transition: transform 0.35s ease-in-out;
+        }
+            .card-gradient-1:hover,
+            .card-gradient-2:hover,
+            .card-gradient-3:hover {
+            transform: scale(1.06); /* 鼠标悬停时放大卡片 */
+    }
+
+
+        .card-link {
+            color: #cddc39;
+        }
+
+        .card-link:hover {
+            color: #a8c731;
+        }
+    </style>
+               <div class="container p-1">
+                  <div class="card shadow shadow card-gradient-1 mb-3">
+                    <div class="card-body">
+                      <h4 class="card-title">恩格尔</h4>
+                      <p class="card-text">你的恩格尔系数为：{{ food_expense_ratio }}{{ quality_evaluation }}
+                      </p>
+                      <a href="#" class="card-link">卡片链接</a>
+                      <a href="#" class="card-link">另一个链接</a>
+                    </div>
+                  </div>
+                </div>
+               <div class="container p-1">
+              <div class="card shadow card-gradient-3 mb-3">
+                <div class="card-body">
+                  <h4 class="card-title">收支</h4>
+                  <p class="card-text">{{ suggestion }}</p>
+                  <a href="#" class="card-link">卡片链接</a>
+                  <a href="#" class="card-link">另一个链接</a>
+                </div>
+              </div>
+                </div>
+               <div class="container p-1">
+              <div class="card shadow card-gradient-2 mb-3">
+                <div class="card-body">
+                  <h4 class="card-title">储蓄与投资分析</h4>
+                  <p class="card-text">一些实例文本。一些实例文本。{{ car_loan_ratio }}</p>
+                  <a href="#" class="card-link">卡片链接</a>
+                  <a href="#" class="card-link">另一个链接</a>
+                </div>
+              </div>
+
+                        </div>
             </div>
             <div id="worker" class="container-xxl tab-pane fade"><br>
                 <h3>开发者</h3>
