@@ -227,14 +227,40 @@ body {
     background-size: 500% 500%;
     transition: background 3s ease;
     background-position: 50% 50%;
+    position: relative; /* Needed for the ::before pseudo-element */
+}
+
+body::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url("/static/img/back2.png"); /* Background image */
+    background-repeat: repeat; /* Repeat image */
+    background-size: 300px 300px; /* Image size */
+    background-position: 0 0; /* Image starts at top-left */
+    opacity: 0.8; /* Set opacity to desired level */
+    animation: scrollBackground 8s linear infinite; /* Animation for the image */
+    z-index: -1; /* Ensure it's behind content */
 }
 
 body.is-register {
-    background-position: 0% 50%;
+    background-position:0% 50%; /* Gradient changes position */
 }
 
 body.is-login {
-    background-position: 100% 50%;
+    background-position:100% 50%; /* Gradient changes position */
+}
+
+@keyframes scrollBackground {
+    0% {
+        background-position: 0 0; /* Image starts at top-left, gradient initial position */
+    }
+    100% {
+        background-position: 300px 300px; /* Image ends at bottom-right, gradient initial position */
+    }
 }
 
 .card {
@@ -294,4 +320,15 @@ body.is-login {
 .github-btn-R:hover {
     background-color: rgba(250, 131, 149, 0.8); /* 粉色，透明度设为0.5 */
     border-color: rgba(250, 131, 149, 0.8); /* 边框颜色也改成相同的粉色和透明度 */
+}
+
+/* 样式定义 */
+.error-message {
+    color: red;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+.error-message .icon {
+    margin-right: 5px;
 }

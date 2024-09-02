@@ -1,5 +1,40 @@
 #top-container {
-  padding: 50px;
+    padding: 20px;
+}
+
+.nav-forms {
+
+}
+
+body {
+    background-image: linear-gradient(to right, #eea2a2 0%, #bbc1bf 19%, #57c6e1 42%, #b49fda 79%, #7ac5d8 100%);
+    transition: transform 0.35s ease-in-out;
+    position: relative; /* Needed for the ::before pseudo-element */
+}
+
+body::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url("/static/img/back2.png"); /* Background image */
+    background-repeat: repeat; /* Repeat image */
+    background-size: 300px 300px; /* Image size */
+    background-position: 0 0; /* Image starts at top-left */
+    opacity: 1; /* Set opacity to desired level */
+    animation: scrollBackground 8s linear infinite; /* Animation for the image */
+    z-index: -1; /* Ensure it's behind content */
+}
+
+@keyframes scrollBackground {
+    0% {
+        background-position: 0 0; /* Image starts at top-left, gradient initial position */
+    }
+    100% {
+        background-position: 300px 300px; /* Image ends at bottom-right, gradient initial position */
+    }
 }
 
 /* #worker区域的容器样式 */
@@ -9,9 +44,33 @@
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
-    background: #ffffff;
+    background: rgba(255, 255, 255, 0);
     overflow: hidden;
     position: relative;
+}
+
+.simple-text-card {
+    background: rgba(255, 255, 255, 0.4); /* 白色背景，带有透明度 */
+    padding: 20px;
+    border-radius: 10px;
+    backdrop-filter: blur(10px); /* 毛玻璃效果，数值越大模糊度越高 */
+    -webkit-backdrop-filter: blur(10px); /* Safari 支持 */
+    transition: transform 0.35s ease-in-out, box-shadow 0.35s ease-in-out;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* 轻微阴影 */
+    max-width: 300px;
+    margin: 20px auto;
+    text-align: center;
+}
+
+.simple-text-card h3 {
+    margin-bottom: 10px;
+    font-size: 24px;
+}
+
+.simple-text-card p {
+    margin: 0;
+    font-size: 16px;
+    color: #555;
 }
 
 /* 将文本固定在页面顶部 */
@@ -37,7 +96,7 @@
     position: absolute;
     width: 240px;
     height: 360px;
-    background-color: #5e5cfc;
+    background-color: rgba(94, 92, 252, 0.6); /* 添加透明度以增强毛玻璃效果 */
     border-radius: 8px;
     display: flex;
     justify-content: center;
@@ -49,6 +108,8 @@
     transition: .5s;
     transform-origin: 50% 100%;
     filter: hue-rotate(calc(var(--i) * 60deg));
+    backdrop-filter: blur(10px); /* 添加毛玻璃效果 */
+    -webkit-backdrop-filter: blur(10px); /* 兼容Safari */
 }
 
 /* 默认隐藏 .info 部分 */
@@ -144,4 +205,236 @@
 #worker .card .github-btn:hover {
     background-color: #555; /* 更改悬停时的背景颜色 */
     color: white; /* 保持文字颜色 */
+}
+
+#home .left-card-1,
+#home .left-card-2,
+#home .left-card-3,
+#home .right-card-1,
+#home .right-card-2 {
+    background: rgba(255, 255, 255, 0.4); /* 白色背景，带有透明度 */
+    color: black;
+    padding: 20px;
+    border-radius: 10px;
+    backdrop-filter: blur(10px); /* 毛玻璃效果，数值越大模糊度越高 */
+    -webkit-backdrop-filter: blur(10px); /* Safari 支持 */
+    transition: transform 0.35s ease-in-out, box-shadow 0.35s ease-in-out;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* 轻微阴影 */
+    will-change: transform; /* 优化渲染 */
+    backface-visibility: hidden; /* 处理模糊问题 */
+    max-height: 500px;
+}
+
+#home .left-card-3-1,
+#home .left-card-3-2 {
+    background: rgba(255, 255, 255, 0.4); /* 白色背景，带有透明度 */
+    color: black;
+    padding: 5px;
+    border-radius: 10px;
+    backdrop-filter: blur(10px); /* 毛玻璃效果，数值越大模糊度越高 */
+    -webkit-backdrop-filter: blur(10px); /* Safari 支持 */
+    transition: transform 0.35s ease-in-out, box-shadow 0.35s ease-in-out;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* 轻微阴影 */
+    will-change: transform; /* 优化渲染 */
+    backface-visibility: hidden; /* 处理模糊问题 */
+}
+
+/* 悬停时的放大效果和阴影 */
+#home .left-card-1:hover,
+/*
+#home .left-card-2:hover,
+#home .left-card-3:hover,
+#home .right-card-1:hover,
+*/
+#home .right-card-2:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.scrollable-content {
+    max-height: 400px; /* 设置最大高度，可根据需要调整 */
+    overflow-y: auto;  /* 启用垂直滚动 */
+    padding-right: 10px; /* 防止滚动条覆盖内容 */
+}
+
+/* 定义滚动条的宽度或高度 */
+::-webkit-scrollbar {
+    width: 8px; /* 纵向滚动条的宽度 */
+    height: 8px; /* 横向滚动条的高度 */
+}
+/* 滚动条的轨道 */
+::-webkit-scrollbar-track {
+    background: #f1f1f1; /* 轨道颜色 */
+    border-radius: 10px; /* 轨道圆角 */
+}
+/* 滚动条的滑块 */
+::-webkit-scrollbar-thumb {
+    background: #888; /* 滑块颜色 */
+    border-radius: 10px; /* 滑块圆角 */
+}
+/* 滑块在 hover 状态下的颜色 */
+::-webkit-scrollbar-thumb:hover {
+    background: #555; /* 滑块 hover 颜色 */
+}
+
+.btn-left-3-1-1,
+.btn-left-3-1-2,
+.btn-left-3-2 {
+    background: rgba(255, 255, 255, 0.4); /* 白色背景，带有透明度 */
+    color: #676767;
+    display: inline-block;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    text-decoration: none;
+    font-family: sans-serif;
+    transition: 2s;
+}
+
+.btn-left-3-1-1:before,.btn-left-3-1-1:after,
+.btn-left-3-2:before,.btn-left-3-2:after {
+    content: "";
+    position: absolute;
+    top: -1.5em;
+    z-index: -1;
+    width: 200%;
+    aspect-ratio: 1;
+    border: none;
+    border-radius: 40%;
+    background-color: rgba(74, 74, 243, 0.25);
+    transition: 2s;
+}
+
+.btn-left-3-1-2:before,.btn-left-3-1-2:after {
+    content: "";
+    position: absolute;
+    top: -1.5em;
+    z-index: -1;
+    width: 200%;
+    aspect-ratio: 1;
+    border: none;
+    border-radius: 40%;
+    background-color: rgba(251, 92, 158, 0.5);
+    transition: 2s;
+}
+
+.btn-left-3-1-1:before,
+.btn-left-3-1-2:before,
+.btn-left-3-2:before {
+    left: -60%;
+    transform: translate3d(0, 5em, 0) rotate(-340deg);
+}
+
+.btn-left-3-1-1:after,
+.btn-left-3-1-2:after,
+.btn-left-3-2:after {
+    right: -60%;
+    transform: translate3d(0, 5em, 0) rotate(390deg);
+}
+
+.btn-left-3-1-1:hover,.btn-left-3-1-1:focus,
+.btn-left-3-1-2:hover,.btn-left-3-1-2:focus,
+.btn-left-3-2:hover,.btn-left-3-2:focus {
+    color: white;
+}
+
+.btn-left-3-1-1:hover:before,.btn-left-3-1-1:hover:after,.btn-left-3-1-1:focus:before,.btn-left-3-1-1:focus:after,
+.btn-left-3-2:hover:before,.btn-left-3-2:hover:after,.btn-left-3-2:focus:before,.btn-left-3-2:focus:after {
+    transform: none;
+    background-color: rgba(74, 74, 243, 0.25);
+}
+
+.btn-left-3-1-2:hover:before,.btn-left-3-1-2:hover:after,.btn-left-3-1-2:focus:before,.btn-left-3-1-2:focus:after {
+    transform: none;
+    background-color: rgba(251, 92, 158, 0.5);
+}
+
+.btn-left-3-1-1:before, .btn-left-3-1-1:after,
+.btn-left-3-1-2:before, .btn-left-3-1-2:after,
+.btn-left-3-2:before, .btn-left-3-2:after {
+    transform: translate3d(0, 5em, 0) rotate(-340deg); /* 确保恢复到初始状态 */
+}
+
+.btn-left-2-1 {
+    background: rgba(255, 255, 255, 0.4); /* 初始背景颜色，带有透明度 */
+    color: #676767;
+    display: inline-block;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    text-decoration: none;
+    font-family: sans-serif;
+    transition: background-position 0.4s ease; /* 平滑过渡效果 */
+    background-size: 200% 100%; /* 背景尺寸 */
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.4) 50%, rgba(71, 88, 251, 0.7) 50%); /* 渐变背景 */
+    background-position: 0 0; /* 初始背景位置 */
+}
+
+.btn-left-2-1:hover {
+    background-position: -100% 0; /* 悬停时背景位置改变 */
+    color: #fff; /* 悬停时文字颜色变白 */
+}
+
+.btn-right-4-1 {
+    background: rgba(255, 255, 255, 0.4); /* 按钮背景色 */
+    color: #6c6b6b; /* 按钮文字颜色 */
+    display: inline-block;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    text-decoration: none;
+    font-family: sans-serif;
+    transition: color 0.3s ease-in-out; /* 文字颜色渐变 */
+    padding: 0px 10px; /* 按钮的内边距 */
+    cursor: pointer; /* 鼠标悬停时显示手形光标 */
+    height: 37px; /* 固定按钮宽度 */
+
+}
+
+.btn-right-4-1:hover {
+    background-color: rgba(11, 11, 250, 0.5);
+    color: #ffffff; /* 按钮文字颜色 */
+    display: inline-block;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    text-decoration: none;
+    font-family: sans-serif;
+    transition: color 0.3s ease-in-out; /* 文字颜色渐变 */
+    padding: 0px 10px; /* 按钮的内边距 */
+    cursor: pointer; /* 鼠标悬停时显示手形光标 */
+}
+
+.btn-right-4-1::after {
+    content: "";
+    position: absolute;
+    bottom: 6px; /* 直线距离按钮底部的距离，调整此值可移动直线 */
+    left: 0; /* 直线初始位置在按钮的左侧 */
+    width: 100%; /* 直线的宽度覆盖整个按钮 */
+    height: 3px; /* 直线的厚度 */
+    background-color: #676767; /* 直线的颜色 */
+    transform: translateX(-100%); /* 初始状态下将直线隐藏在左侧 */
+    transition: transform 0.5s ease-out, opacity 0.5s ease-out; /* 设置移动和透明度动画 */
+    opacity: 0; /* 初始状态下隐藏直线 */
+}
+
+.btn-right-4-1:hover::after {
+    transform: translateX(0); /* 鼠标悬停时从左向右移动直线 */
+    opacity: 1; /* 悬浮时显示直线 */
+}
+
+.btn-image {
+    position: absolute;
+    bottom: 50%; /* 将图片定位在按钮的中间垂直方向 */
+    left: 0; /* 图片初始位置在按钮的左侧 */
+    transform: translateY(50%) translateX(-100%); /* 初始状态下将图片隐藏在左侧 */
+    transition: transform 0.5s ease-out; /* 设置图片移动的动画 */
+    width: 20px; /* 调整图片大小 */
+    height: auto; /* 保持图片的宽高比 */
+    opacity: 0; /* 初始状态下隐藏图片 */
+}
+
+.btn-right-4-1:hover .btn-image {
+    transform: translateY(50%) translateX(1750%); /* 鼠标悬停时将图片移动到右侧 */
+    opacity: 1; /* 悬停时显示图片 */
 }

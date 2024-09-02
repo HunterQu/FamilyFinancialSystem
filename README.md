@@ -31,3 +31,4 @@ python manage.py createsuperuser
 
 创建完成后即可访问`http://127.0.0.1:8000/admin/` 登录管理页面
 
+![Alt](https://repobeats.axiom.co/api/embed/d9e762e476542e1591b20afca0d1d61a434bee2b.svg "Repobeats analytics image")
