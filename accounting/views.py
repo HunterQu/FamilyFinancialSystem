@@ -137,35 +137,6 @@ def index(request):
                 time_of_occurrence__month=selected_month
             ).order_by("-time_of_occurrence")
 
-            # 初始化收入和支出变量
-            income = 0
-            expense = 0
-            day_has_record = []
-            current_month_records = {}
-            day_income_expense = {}
-
-            for hr in history_records:
-                if hr.category.category_type.lower() == "expense":
-                    expense -= hr.amount
-                elif hr.category.category_type.lower() == "income":
-                    income += hr.amount
-
-                day_occur = hr.time_of_occurrence.strftime("%Y-%m-%d %A")
-                if day_occur not in day_has_record:
-                    day_has_record.append(day_occur)
-                    current_month_records[day_occur] = [hr]
-                    day_income_expense[day_occur] = {"income": 0, "expense": 0}
-                    if hr.category.category_type.lower() == "expense":
-                        day_income_expense[day_occur]["expense"] += hr.amount
-                    elif hr.category.category_type.lower() == "income":
-                        day_income_expense[day_occur]["income"] += hr.amount
-                else:
-                    current_month_records[day_occur].append(hr)
-                    if hr.category.category_type.lower() == "expense":
-                        day_income_expense[day_occur]["expense"] += hr.amount
-                    elif hr.category.category_type.lower() == "income":
-                        day_income_expense[day_occur]["income"] += hr.amount
-            day_has_record.sort(reverse=True)
         food_category_name = "饮食"
         first_day_of_month = datetime.date(selected_year, selected_month, 1)
         # 获取下个月的第一天
@@ -317,6 +288,7 @@ def index(request):
             'education_evaluation': education_evaluation,
             'loan_suggestion': loan_suggestion,
         }
+        print(current_month_records)
         return render(request, 'accounting/index.html', context)
     else:
         return render(request, 'accounting/index.html')
