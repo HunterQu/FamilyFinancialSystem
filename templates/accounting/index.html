@@ -182,75 +182,106 @@
                 <br>
                 <h3 style="text-align: center;">月度账单分析</h3>
                 <br>
-                <br>
-                <br>
 
                 <style>
-        /* 卡片1的渐变背景颜色 */
-        .card-gradient-1 {
-            background: linear-gradient(to top, #30cfd0 0%, #330867 100%);
-            color: white;
-            transition: transform 0.35s ease-in-out;
-        }
+                /* 卡片1的渐变背景颜色 */
+                .card-gradient-1 {
+                    background: linear-gradient(to top, #30cfd0 0%, #330867 100%);
+                    color: white;
+                    transition: transform 0.35s ease-in-out;
+                }
 
-        /* 卡片2的渐变背景颜色 */
-        .card-gradient-2 {
-            background-image: linear-gradient(to right, #eea2a2 0%, #bbc1bf 19%, #57c6e1 42%, #b49fda 79%, #7ac5d8 100%);
-            color: white;
-            transition: transform 0.35s ease-in-out;
-        }
+                /* 卡片2的渐变背景颜色 */
+                .card-gradient-2 {
+                    background-image: linear-gradient(to right, #eea2a2 0%, #bbc1bf 19%, #57c6e1 42%, #b49fda 79%, #7ac5d8 100%);
+                    color: white;
+                    transition: transform 0.35s ease-in-out;
+                }
+                .card-gradient-3 {
+                    background: linear-gradient(120deg, #CBBACC 0%, #2580B3 100%); /* 渐变从橙色到红色 */
+                    color: white;
+                    transition: transform 0.35s ease-in-out;
+                }
+                    .card-gradient-1:hover,
+                    .card-gradient-2:hover,
+                    .card-gradient-3:hover {
+                    transform: scale(1.06); /* 鼠标悬停时放大卡片 */
+                }
+                .card-gradient-4 {
+                    background: linear-gradient(to right, #8baaaa, #ae8b9c);
+                    color: white;
+                    transition: transform 0.35s ease-in-out;
+                }
+                .card-gradient-4:hover {
+                    transform: scale(1.06); /* 鼠标悬停时放大卡片 */
+                .card-link {
+                    color: #cddc39;
+                }
 
-        /* 卡片3的渐变背景颜色 */
-        .card-gradient-3 {
-            background: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%); /* 渐变从橙色到红色 */
-            color: white;
-            transition: transform 0.35s ease-in-out;
-        }
-            .card-gradient-1:hover,
-            .card-gradient-2:hover,
-            .card-gradient-3:hover {
-            transform: scale(1.06); /* 鼠标悬停时放大卡片 */
-    }
-
-
-        .card-link {
-            color: #cddc39;
-        }
-
-        .card-link:hover {
-            color: #a8c731;
-        }
+                .card-link:hover {
+                    color: #a8c731;
+                }
     </style>
-               <div class="container p-1">
-                  <div class="card shadow shadow card-gradient-1 mb-3">
-                    <div class="card-body">
-                      <h4 class="card-title">恩格尔</h4>
-                      <p class="card-text">你的恩格尔系数为：{{ food_expense_ratio }}{{ quality_evaluation }}
-                      </p>
-                      <a href="#" class="card-link">卡片链接</a>
-                      <a href="#" class="card-link">另一个链接</a>
+         <div class="d-flex justify-content-center align-items-center">
+        <form method="GET" action="{% url 'index' %}" class="form-inline">
+            <div class="form-group mb-2">
+                <label for="year" class="mr-2">选择年份:</label>
+                <select class="custom-select mr-3" id="year" name="year">
+                    {% for y in year_range %}
+                    <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group mb-2">
+                <label for="month" class="mr-2">选择月份:</label>
+                <select class="custom-select mr-3" id="month" name="month">
+                    {% for m in month_range %}
+                    <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group mb-2">
+                <button type="submit" class="btn btn-info">分析</button>
+            </div>
+        </form>
+    </div>
+
+
+                <div class="container p-1">
+                    <div class="card shadow shadow card-gradient-1 mb-3">
+                        <div class="card-body">
+                            <h4 class="card-title">恩格尔系数</h4>
+                            <p class="card-text">你的恩格尔系数为：{{ food_expense_ratio }}<br>{{ quality_evaluation }}
+                            </p>
+                        </div>
                     </div>
-                  </div>
                 </div>
-               <div class="container p-1">
-              <div class="card shadow card-gradient-3 mb-3">
-                <div class="card-body">
-                  <h4 class="card-title">收支</h4>
-                  <p class="card-text">{{ suggestion }}</p>
-                  <a href="#" class="card-link">卡片链接</a>
-                  <a href="#" class="card-link">另一个链接</a>
+                <div class="container p-1">
+                    <div class="card shadow card-gradient-4 mb-3">
+                        <div class="card-body">
+                            <h4 class="card-title">教育发展支出占比</h4>
+                            <p class="card-text">教育支出占总支出的比例：{{ education_expense_ratio }}% <br> {{ education_evaluation }} </p>
+                        </div>
+                    </div>
                 </div>
-              </div>
+
+                <div class="container p-1">
+                    <div class="card shadow card-gradient-3 mb-3">
+                        <div class="card-body">
+                            <h4 class="card-title">收支平衡分析</h4>
+                            <p class="card-text">{{ suggestion|safe }}</p>
+                        </div>
+                    </div>
                 </div>
-               <div class="container p-1">
-              <div class="card shadow card-gradient-2 mb-3">
-                <div class="card-body">
-                  <h4 class="card-title">储蓄与投资分析</h4>
-                  <p class="card-text">一些实例文本。一些实例文本。{{ car_loan_ratio }}</p>
-                  <a href="#" class="card-link">卡片链接</a>
-                  <a href="#" class="card-link">另一个链接</a>
-                </div>
-              </div>
+                <div class="container p-1">
+                    <div class="card shadow card-gradient-2 mb-3">
+                        <div class="card-body">
+                            <h4 class="card-title">储蓄与投资分析</h4>
+                            <p class="card-text">你的车贷{{ car_loan_ratio }} 房贷 {{ house_loan_ratio }} <br> {{ loan_suggestion }}</p>
+                        </div>
+                    </div>
 
                         </div>
             </div>

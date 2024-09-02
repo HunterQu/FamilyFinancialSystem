@@ -4,13 +4,14 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from django.contrib.auth.models import User
 import datetime
-
 from .forms import HistoryRecordForm
 import decimal
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth import authenticate, logout
+from django.utils.timezone import now
+from datetime import timedelta
 from django.contrib import messages
-
+from datetime import  timedelta
 
 #注册
 def register(request):
@@ -74,11 +75,92 @@ def index(request):
         day_has_record.sort(reverse=True)
 
         # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>分析数据获取<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-        food_category_name = "饮食"
+        if request.user.is_authenticated:
+            today = datetime.date.today()
 
+            # 获取当前年份和月份
+            current_year = today.year
+            current_month = today.month
+
+            # 获取用户选择的年份和月份（默认为当前年份和月份）
+            selected_year = int(request.GET.get('year', current_year))
+            selected_month = int(request.GET.get('month', current_month))
+
+            # 生成年份范围，例如过去5年到未来5年
+            year_range = range(current_year - 5, current_year + 1)
+            # 生成月份范围
+            month_range = range(1, 13)
+
+            # 获取当前用户
+            cur_user = NormalUser.objects.filter(name=request.user)[0]
+
+            # 过滤选择的年份和月份的数据
+            history_records_choosed  = HistoryRecord.objects.filter(
+                username=cur_user,
+                time_of_occurrence__year=selected_year,
+                time_of_occurrence__month=selected_month
+            ).order_by("-time_of_occurrence")
+
+            # 获取所有账户和货币
+            all_accounts = Account.objects.filter(owner=cur_user)
+            currencies = Currency.objects.all()
+
+            # 获取选择月份的历史记录
+            history_records_choosed = HistoryRecord.objects.filter(
+                username=cur_user,
+                time_of_occurrence__year=selected_year,
+                time_of_occurrence__month=selected_month
+            ).order_by("-time_of_occurrence")
+
+            # 初始化收入和支出变量
+            income = 0
+            expense = 0
+            day_has_record = []
+            current_month_records = {}
+            day_income_expense = {}
+
+            for hr in history_records:
+                if hr.category.category_type.lower() == "expense":
+                    expense -= hr.amount
+                elif hr.category.category_type.lower() == "income":
+                    income += hr.amount
+
+                day_occur = hr.time_of_occurrence.strftime("%Y-%m-%d %A")
+                if day_occur not in day_has_record:
+                    day_has_record.append(day_occur)
+                    current_month_records[day_occur] = [hr]
+                    day_income_expense[day_occur] = {"income": 0, "expense": 0}
+                    if hr.category.category_type.lower() == "expense":
+                        day_income_expense[day_occur]["expense"] += hr.amount
+                    elif hr.category.category_type.lower() == "income":
+                        day_income_expense[day_occur]["income"] += hr.amount
+                else:
+                    current_month_records[day_occur].append(hr)
+                    if hr.category.category_type.lower() == "expense":
+                        day_income_expense[day_occur]["expense"] += hr.amount
+                    elif hr.category.category_type.lower() == "income":
+                        day_income_expense[day_occur]["income"] += hr.amount
+            day_has_record.sort(reverse=True)
+        food_category_name = "饮食"
+        first_day_of_month = datetime.date(selected_year, selected_month, 1)
+        # 获取下个月的第一天
+        first_day_of_next_month = (first_day_of_month + timedelta(days=32)).replace(day=1)
         # 获取收入和支出类别的所有记录
-        income_records = HistoryRecord.objects.filter(category__category_type="income")
-        expense_records = HistoryRecord.objects.filter(category__category_type="expense")
+        # 获取当前月内的收入和支出记录
+        # 示例：使用created_date字段来过滤当前月份的记录
+        income_records = HistoryRecord.objects.filter(
+            username=cur_user,
+            category__category_type="income",
+            time_of_occurrence__gte=first_day_of_month,
+            time_of_occurrence__lt=first_day_of_next_month
+        )
+
+        expense_records = HistoryRecord.objects.filter(
+            username=cur_user,
+            category__category_type="expense",
+            time_of_occurrence__gte=first_day_of_month,
+            time_of_occurrence__lt=first_day_of_next_month
+        )
 
         # 获取总收入金额
         total_income = income_records.aggregate(total=Sum('amount'))['total'] or 0
@@ -103,22 +185,48 @@ def index(request):
         # 计算结余或赤字
         balance = total_income - total_expense
         if balance > 0:
-	        suggestion = f"你的收入大于支出，结余金额为：{balance:.2f}元。建议你继续保持储蓄习惯。"
+            suggestion = f"在收支的天平上，你的收入如春风般温暖地占据了上风，结余为：{balance:.2f}元。愿你继续积蓄这份丰盈，让未来的日子如同静谧的花园，满溢着富足与安然。"
         else:
-	        suggestion = f"你的支出大于收入，赤字金额为：{abs(balance):.2f}元。建议你控制支出。"
+            suggestion = (f"在财务的四季里，你的支出如秋风般微凉，超越了收入，赤字为：{abs(balance):.2f}元。<br>"
+                          "现在是回归理性的时刻，收拢那散落的叶子，为下一个丰收季节做好准备。")
 
         # 生活质量评估
         if food_expense_ratio > 60:
-	        quality_evaluation = "生活品质较差"
+            quality_evaluation = "生活的乐章似乎奏得过于沉重，或许在饮食上稍作减轻，能让日子更为轻盈美好。"
         elif 50 < food_expense_ratio <= 60:
-	        quality_evaluation = "生活品质一般"
+            quality_evaluation = "你的生活宛如一幅画，虽有明亮的色彩，却缺少了些许和谐，不妨在饮食上稍作调整。"
         elif 40 < food_expense_ratio <= 50:
-	        quality_evaluation = "生活品质较好"
+            quality_evaluation = "生活如诗，饮食的安排已然恰到好处，令人感受到舒适与平衡。"
         else:
-	        quality_evaluation = "生活品质优秀"
+            quality_evaluation = "你的生活如同一首优美的乐曲，饮食恰如其分，透露出一种宁静与安然。"
         car_loan_category_name = "车贷"
         house_loan_category_name = "房贷"
         investment_category_name = "理财"
+
+        education_category_name = "教育"
+
+        # 获取教育支出的记录
+        education_expense_records = expense_records.filter(
+            Q(category__name=education_category_name) | Q(sub_category__parent__name=education_category_name)
+        )
+
+        # 计算教育支出的总金额
+        education_expense_total = education_expense_records.aggregate(total=Sum('amount'))['total'] or 0
+
+        # 计算教育支出占总支出的比例
+        if total_expense > 0:
+            education_expense_ratio = round((education_expense_total / total_expense) * 100, 2)
+        else:
+            education_expense_ratio = 0.00
+        # 教育支出评价
+        if education_expense_ratio > 30:
+            education_evaluation = "你在教育上的投资比例较高，展现了你对教育的重视。尽管这将有助于提升长期的生活质量，但请注意平衡其他必要的开支。"
+        elif 20 < education_expense_ratio <= 30:
+            education_evaluation = "你的教育支出较为合理，既体现了你对未来的信心，也保持了日常生活的平衡。"
+        elif 10 < education_expense_ratio <= 20:
+            education_evaluation = "你在教育上的投入比例偏低，虽然这让你有更多的资金用于其他方面，但适当增加教育投资或许会带来更大的长期回报。"
+        else:
+            education_evaluation = "你的教育支出比例极低，这可能会影响个人和家庭的长远发展，建议适当增加对教育的投入。"
 
         # 获取车贷和房贷的支出记录
         car_loan_expense_records = expense_records.filter(
@@ -147,24 +255,41 @@ def index(request):
         else:
 	        car_loan_ratio = 0
 	        house_loan_ratio = 0
+        if car_loan_expense_total == 0 and house_loan_expense_total == 0:
+            loan_suggestion = "你在这片财务之海上，轻装上阵，无车贷与房贷的羁绊。或许是时候张开帆布，寻找新的投资之港，让财富的风帆更加稳健地前行。"
+        elif car_loan_expense_total == 0:
+            loan_suggestion = "你未曾在车贷的道路上停留，这赋予了你更多的自由与呼吸的空间。若心中有购车的渴望，请在旅程开始前，慎重考虑这是否是你所愿踏上的征途。"
+        elif house_loan_expense_total == 0:
+            loan_suggestion = "你尚未在房贷的庭院中驻足，手中握有更多的财务自由。若你心中描绘着一幅家园的图景，请在规划蓝图时，确保它不会成为生活的重负。"
+        else:
+            loan_suggestion = "你的车贷与房贷，像两座矗立的灯塔，指引着你在财务之河中前行。愿你在这些支出之中，仍能找到生活的平衡，保持内心的宁静与安稳。"
 
         context = {
+            'year_range': year_range,
+            'month_range': month_range,
+            'selected_year': selected_year,
+            'selected_month': selected_month,
             'accounts': all_accounts,
             'currencies': currencies,
             'ie_types': ie_types,
             'day_has_record': day_has_record,
             'history_records': history_records,
+            'history_records_choosed': history_records_choosed,
             'current_month_income': income,
             'current_month_expense': expense,
             'surplus': income + expense,
             'current_month_records': current_month_records,
             'day_income_expense': day_income_expense,
-	        'food_expense_ratio': f"{food_expense_ratio:.2f}%",
-	        'quality_evaluation': quality_evaluation,
-	        'suggestion': suggestion,
-	        'car_loan_ratio': f"{car_loan_ratio:.2f}%",
-	        'house_loan_ratio': f"{house_loan_ratio:.2f}%",
-	        'investment_total': f"{investment_total:.2f}",
+            'food_expense_ratio': f"{food_expense_ratio:.2f}%",
+            'quality_evaluation': quality_evaluation,
+            'suggestion': suggestion,
+            'car_loan_ratio': f"{car_loan_ratio:.2f}%",
+            'house_loan_ratio': f"{house_loan_ratio:.2f}%",
+            'investment_total': f"{investment_total:.2f}",
+            'education_expense_total': education_expense_total,
+            'education_expense_ratio': education_expense_ratio,
+            'education_evaluation': education_evaluation,
+            'loan_suggestion': loan_suggestion,
         }
         return render(request, 'accounting/index.html', context)
     else:
