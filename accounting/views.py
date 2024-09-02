@@ -4,7 +4,8 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from django.contrib.auth.models import User
 import datetime
-
+from django.utils import timezone
+from datetime import timedelta
 from .forms import HistoryRecordForm,TransferRecordForm
 import decimal
 from django.contrib.auth import authenticate, login as auth_login
@@ -26,6 +27,8 @@ def register(request):
             # 用户已存在，返回注册页面并显示提示
             return render(request, 'accounting/login.html', {'exists': True, 'show_register': True})
 
+        nor_user = NormalUser(name=user_name)
+        nor_user.save()
         user = User.objects.create_user(username=user_name, password=pwd, email=email)
         user.save()
 
@@ -38,11 +41,22 @@ def register(request):
 from .models import *
 def index(request):
     if request.user.is_authenticated:
+        now = timezone.now()
+        thirty_days_ago = now - timedelta(days=30)
         today = datetime.date.today()
         cur_user = NormalUser.objects.filter(name=request.user)[0]
         all_accounts = Account.objects.filter(owner=cur_user)
         currencies = Currency.objects.all()
-        history_records = HistoryRecord.objects.filter(username=cur_user ,time_of_occurrence__year=today.year, time_of_occurrence__month=today.month).order_by("-time_of_occurrence")
+        # history_records = HistoryRecord.objects.filter(username=cur_user ,time_of_occurrence__year=today.year, time_of_occurrence__month=today.month).order_by("-time_of_occurrence")
+        # transfer_records = TransferRecord.objects.filter(username=cur_user ,time_of_occurrence__year=today.year,time_of_occurrence__month=today.month).order_by("-time_of_occurrence")
+        history_records = HistoryRecord.objects.filter(
+            username=cur_user,
+            time_of_occurrence__gte=thirty_days_ago
+        ).order_by("-time_of_occurrence")
+        transfer_records = TransferRecord.objects.filter(
+            username=cur_user,
+            time_of_occurrence__gte=thirty_days_ago
+        ).order_by("-time_of_occurrence")
         ie_types = Category.CATEGORY_TYPES
 
         income = 0
@@ -71,6 +85,16 @@ def index(request):
                     day_income_expense[day_occur]["expense"] += hr.amount
                 elif hr.category.category_type.lower() == "income":
                     day_income_expense[day_occur]["income"] += hr.amount
+        day_has_record.sort(reverse=True)
+
+        for tr in transfer_records:
+            day_occur = tr.time_of_occurrence.strftime("%Y-%m-%d %A")
+            if day_occur not in day_has_record:
+                day_has_record.append(day_occur)
+                current_month_records[day_occur] = [tr]
+                day_income_expense[day_occur] = {"income": 0, "expense": 0}
+            else:
+                current_month_records[day_occur].append(tr)
         day_has_record.sort(reverse=True)
 
         # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>分析数据获取<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -149,6 +173,7 @@ def index(request):
 	        house_loan_ratio = 0
 
         context = {
+            'transfer_records': transfer_records,
             'accounts': all_accounts,
             'currencies': currencies,
             'ie_types': ie_types,
@@ -364,3 +389,142 @@ def login_in(request):
 def logout_(request):
 	logout(request)
 	return redirect('/accounting/login')
+
+def retrieve_year_has_data(request):
+    if request.user.is_authenticated:
+        hr_first = HistoryRecord.objects.order_by("time_of_occurrence").first()
+        hr_last = HistoryRecord.objects.order_by("time_of_occurrence").last()
+        year_list = [y for y in range(hr_last.time_of_occurrence.year, hr_first.time_of_occurrence.year-1, -1)]
+        return JsonResponse({"years": year_list})
+    else:
+        return JsonResponse({"error": "unauthenticated"})
+
+
+def retrieve_month_has_data(request):
+    if request.user.is_authenticated:
+        year = request.POST.get('year')
+        hr = HistoryRecord.objects.filter(time_of_occurrence__year=year).order_by("time_of_occurrence")
+        hr_first = hr.first()
+        hr_last = hr.last()
+        month_list = [m for m in range(hr_last.time_of_occurrence.month, hr_first.time_of_occurrence.month-1, -1)]
+        return JsonResponse({"months": month_list})
+    else:
+        return JsonResponse({"error": "unauthenticated"})
+
+def filter_record_by_date(request):
+    if request.user.is_authenticated:
+        post_year = request.POST.get('year')
+        post_month = request.POST.get('month')
+        username = NormalUser.objects.filter(name=request.user)[0]
+        history_records = HistoryRecord.objects.filter(username=username, time_of_occurrence__year=post_year, time_of_occurrence__month=post_month).order_by("-time_of_occurrence")
+        transfer_records = TransferRecord.objects.filter(username=username, time_of_occurrence__year=post_year, time_of_occurrence__month=post_month).order_by("-time_of_occurrence")
+        day_has_record = []
+        custom_month_records = {}
+        for hr in history_records:
+            day_occur = hr.time_of_occurrence.strftime("%Y-%m-%d %A")
+            if hr.sub_category:
+                sub_category = hr.sub_category.name
+            else:
+                sub_category = "no sub category"
+            if hr.comment:
+                comment = hr.comment
+            else:
+                comment = ""
+            new_hr = {
+                "category": hr.category.name,
+                "subcategory": sub_category,
+                "amount": hr.amount,
+                "comment": comment,
+                "account": hr.account.name,
+                "ie_type": hr.category.category_type.lower(),
+                "record_type": "income_expense"
+            }
+            if day_occur not in day_has_record:
+                day_has_record.append(day_occur)
+                custom_month_records[day_occur] = [new_hr]
+            else:
+                custom_month_records[day_occur].append(new_hr)
+        for tr in transfer_records:
+            day_occur = tr.time_of_occurrence.strftime("%Y-%m-%d %A")
+            if tr.comment:
+                comment = tr.comment
+            else:
+                comment = ""
+            new_tr = {
+                "amount": tr.amount,
+                "comment": comment,
+                "from_account": tr.from_account.name,
+                "to_account": tr.to_account.name,
+                "record_type": "transfer"
+            }
+            if day_occur not in day_has_record:
+                day_has_record.append(day_occur)
+                custom_month_records[day_occur] = [new_tr]
+            else:
+                custom_month_records[day_occur].append(new_tr)
+        return JsonResponse({'day_has_record': day_has_record, "records": custom_month_records})
+    else:
+        return JsonResponse({"error": "unauthenticated"})
+
+def transfer_between_accounts(request):
+    if request.user.is_authenticated:
+        time_now = timezone.now()
+        form = TransferRecordForm(request.POST)
+        if form.is_valid():
+            username = NormalUser.objects.filter(name=request.user)[0]
+            from_account = form.cleaned_data['from_account']
+            to_account = form.cleaned_data['to_account']
+            if from_account != to_account:
+                transfer_amount = form.cleaned_data['amount']
+                transfer_comment = form.cleaned_data['comment']
+                time_occur = form.cleaned_data['time_of_occurrence']
+                transfer_record = TransferRecord(username=username,
+                                                 from_account=from_account,
+                                                 to_account=to_account,
+                                                 amount=transfer_amount,
+                                                 comment=transfer_comment,
+                                                 time_of_occurrence=time_occur,
+                                                 created_date=time_now,
+                                                 updated_date=time_now
+                                                 )
+                transfer_record.save()
+                from_account.amount -= decimal.Decimal(transfer_amount)
+                from_account.save()
+                to_account.amount += decimal.Decimal(transfer_amount)
+                to_account.save()
+            else:
+                print("WARNING: You are transferring money amount between the same account!")
+        return redirect(index)
+    else:
+        return JsonResponse({"error": "unauthenticated"})
+
+def search_record(request):
+    if request.user.is_authenticated:
+        username = NormalUser.objects.filter(name=request.user)[0]
+        keyword = request.POST.get('keyword')
+        categories = Category.objects.filter(name__icontains=keyword)
+        subcategories = SubCategory.objects.filter(name__icontains=keyword)
+        hrs = HistoryRecord.objects.filter(username=username).filter(Q(category__in=categories) | Q(sub_category__in=subcategories) | Q(comment__icontains=keyword) | Q(amount__icontains=keyword))
+        records = []
+        for hr in hrs:
+            day_occur = hr.time_of_occurrence.strftime("%Y-%m-%d %A")
+            if hr.sub_category:
+                sub_category = hr.sub_category.name
+            else:
+                sub_category = "no sub category"
+            if hr.comment:
+                comment = hr.comment
+            else:
+                comment = ""
+            records.append({
+                "day": day_occur,
+                "category": hr.category.name,
+                "subcategory": sub_category,
+                "amount": hr.amount,
+                "comment": comment,
+                "account": hr.account.name,
+                "ie_type": hr.category.category_type.lower()
+            })
+        return JsonResponse({"records": records})
+    else:
+        return JsonResponse({"error": "unauthenticated"})

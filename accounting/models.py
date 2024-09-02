@@ -1,3 +1,4 @@
+from Tools.i18n.msgfmt import usage
 from django.db import models
 from django.utils import timezone
 
@@ -73,6 +74,9 @@ class HistoryRecord(models.Model): #记录表
     created_date = models.DateTimeField(default=timezone.now)
     updated_date = models.DateTimeField(default=timezone.now)
 
+    def __str__(self):
+        return self.username.__str__() + ' : ' + self.category.__str__() + '-' + self.sub_category.__str__() + '<' + self.amount.__str__() + '>' + '-' + self.time_of_occurrence.__str__()
+
     class Meta:
         ordering = ['-time_of_occurrence']
 
@@ -86,6 +90,9 @@ class TransferRecord(models.Model):
     comment = models.CharField(max_length=500, null=True, blank=True)
     created_date = models.DateTimeField(default=timezone.now)
     updated_date = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.username.__str__() + ' : ' + self.from_account.__str__() + '->' + self.to_account.__str__() + '<' + self.amount.__str__() + '>' + '-' + self.time_of_occurrence.__str__()
 
     class Meta:
         ordering = ['-time_of_occurrence']
