@@ -394,15 +394,24 @@ from django.shortcuts import render
 from .models import HistoryRecord, Category
 from django.db.models import Sum
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta  # Make sure to import timedelta
 
 def charts_view(request):
-    end_date = timezone.now()
-    start_date = end_date - timedelta(days=7)
+    # 获取用户选择的时间范围，默认为7天
+    days = int(request.GET.get('days', 7))
 
-    # 获取收入和支出类别
-    income_category_ids = Category.objects.filter(category_type="income").values_list('id', flat=True)
-    expense_category_ids = Category.objects.filter(category_type="expense").values_list('id', flat=True)
+    # 获取用户选择的收入和支出类别（可以是多个类别）
+    selected_income_categories = request.GET.getlist('income_categories')
+    selected_expense_categories = request.GET.getlist('expense_categories')
+
+    # 处理类别参数（将字符串 ID 转换为整数列表）
+    income_category_ids = [int(id) for id in selected_income_categories if id]
+    expense_category_ids = [int(id) for id in selected_expense_categories if id]
+
+    end_date = timezone.now().date()
+    start_date = end_date - timedelta(days=days)
+
+    all_dates = [(start_date + timedelta(days=i)).strftime('%Y-%m-%d') for i in range(days + 1)]
 
     # 查询收入记录
     income_records = HistoryRecord.objects.filter(
@@ -410,29 +419,29 @@ def charts_view(request):
         time_of_occurrence__range=(start_date, end_date)
     ).values('time_of_occurrence__date').annotate(total_amount=Sum('amount')).order_by('time_of_occurrence__date')
 
+    income_dict = {record['time_of_occurrence__date'].strftime('%Y-%m-%d'): float(record['total_amount']) for record in income_records}
+
     # 查询支出记录
     expense_records = HistoryRecord.objects.filter(
         category_id__in=expense_category_ids,
         time_of_occurrence__range=(start_date, end_date)
     ).values('time_of_occurrence__date').annotate(total_amount=Sum('amount')).order_by('time_of_occurrence__date')
 
-    # 准备折线图数据，将 Decimal 转换为 float
-    income_dates = [record['time_of_occurrence__date'].strftime('%Y-%m-%d') for record in income_records]
-    income_values = [float(record['total_amount']) for record in income_records]
+    expense_dict = {record['time_of_occurrence__date'].strftime('%Y-%m-%d'): float(record['total_amount']) for record in expense_records}
 
-    expense_dates = [record['time_of_occurrence__date'].strftime('%Y-%m-%d') for record in expense_records]
-    expense_values = [float(record['total_amount']) for record in expense_records]
+    income_values = [income_dict.get(date, 0) for date in all_dates]
+    expense_values = [expense_dict.get(date, 0) for date in all_dates]
 
-    # 准备饼状图数据，将 Decimal 转换为 float
+    # 查询并处理饼状图数据
     income_pie_data = HistoryRecord.objects.filter(
         category_id__in=income_category_ids,
         time_of_occurrence__range=(start_date, end_date)
-    ).values('category__name').annotate(total_amount=Sum('amount'))
+    ).values('category__name').annotate(total_amount=Sum('amount')).order_by('category__name')
 
     expense_pie_data = HistoryRecord.objects.filter(
         category_id__in=expense_category_ids,
         time_of_occurrence__range=(start_date, end_date)
-    ).values('category__name').annotate(total_amount=Sum('amount'))
+    ).values('category__name').annotate(total_amount=Sum('amount')).order_by('category__name')
 
     income_pie = [
         {'name': record['category__name'], 'value': float(record['total_amount'])}
@@ -444,17 +453,34 @@ def charts_view(request):
         for record in expense_pie_data
     ]
 
+    income_colors = ['#CCD5AE', '#E0E5B6', '#FAEDCE', '#FEFAE0']
+    expense_colors = ['#0B2F9F', '#161D6F', '#98DED9', '#C7FFD8']
+
+    for i, data in enumerate(income_pie):
+        data['itemStyle'] = {'color': income_colors[i % len(income_colors)]}
+
+    for i, data in enumerate(expense_pie):
+        data['itemStyle'] = {'color': expense_colors[i % len(expense_colors)]}
+
+    # 获取所有收入和支出类别
+    all_income_categories = Category.objects.filter(category_type="income")
+    all_expense_categories = Category.objects.filter(category_type="expense")
+
     context = {
-        'income_dates': income_dates,
+        'income_dates': all_dates,
         'income_values': income_values,
-        'expense_dates': expense_dates,
+        'expense_dates': all_dates,
         'expense_values': expense_values,
         'income_pie': income_pie,
         'expense_pie': expense_pie,
+        'days': days,
+        'all_income_categories': all_income_categories,
+        'all_expense_categories': all_expense_categories,
+        'selected_income_categories': selected_income_categories,
+        'selected_expense_categories': selected_expense_categories
     }
 
     return render(request, 'accounting/charts.html', context)
-
 
     #登录
 def login_in(request):

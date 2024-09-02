@@ -4,16 +4,63 @@
     <meta charset="UTF-8">
     <title>收入与支出图表</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@latest/dist/echarts.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js"></script>
 </head>
 <body>
+    <!-- 添加选择时间范围的表单 -->
+<div class="container">
+    <div class="d-flex justify-content-center align-items-center flex-column">
+        <form method="get">
+            <div class="form-group mb-3 w-100">
+                <label for="days" class="mr-2">选择时间范围:</label>
+                <select class="custom-select w-50" id="days" name="days" onchange="this.form.submit()">
+                    <option value="7" {% if days == 7 %}selected{% endif %}>近7天</option>
+                    <option value="14" {% if days == 14 %}selected{% endif %}>近14天</option>
+                    <option value="30" {% if days == 30 %}selected{% endif %}>近30天</option>
+                </select>
+            </div>
+
+            <div class="form-group mb-3 w-100">
+                <label class="mr-2">选择收入类别:</label><br>
+                {% for category in all_income_categories %}
+                <div class="form-check form-check-inline">
+                    <label class="form-check-label">
+                        <input type="checkbox" class="form-check-input" name="income_categories" value="{{ category.id }}"
+                            {% if category.id|stringformat:"s" in selected_income_categories %}checked{% endif %}>
+                        {{ category.name }}
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="form-group mb-3 w-100">
+                <label class="mr-2">选择支出类别:</label><br>
+                {% for category in all_expense_categories %}
+                <div class="form-check form-check-inline">
+                    <label class="form-check-label">
+                        <input type="checkbox" class="form-check-input" name="expense_categories" value="{{ category.id }}"
+                            {% if category.id|stringformat:"s" in selected_expense_categories %}checked{% endif %}>
+                        {{ category.name }}
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="form-group mb-3 w-100 text-center">
+                <button type="submit" class="btn btn-primary btn-lg">应用筛选</button>
+            </div>
+        </form>
+    </div>
+</div>
+
     <!-- 折线图容器 -->
-    <div id="lineChart" style="width: 90%; height: 300px; border: 1px solid #eecc11; padding: 40px"></div>
+    <div id="lineChart" style="width: 90%; height: 400px; border: 1px solid #eecc11; padding: 40px"></div>
 
     <!-- 饼状图容器（收入） -->
-    <div id="pieChartIncome" style="width: 600px; height: 400px; margin-top: 20px;"></div>
+    <div id="pieChartIncome" style="float:left; width: 900px; height: 400px; margin-top: 20px;"></div>
 
     <!-- 饼状图容器（支出） -->
-    <div id="pieChartExpense" style="width: 600px; height: 400px; margin-top: 20px;"></div>
+    <div id="pieChartExpense" style="float:right; width: 900px; height: 400px; margin-top: 20px;"></div>
 
     <script>
         // 渲染折线图
@@ -27,7 +74,7 @@
 
         var lineOption = {
             title: {
-                text: '过去一周收入与支出情况'
+                text: '收入与支出折线图'
             },
             tooltip: {
                 trigger: 'axis'
@@ -37,7 +84,7 @@
             },
             xAxis: {
                 type: 'category',
-                data: [...new Set(incomeDates.concat(expenseDates))]  // 合并日期并去重
+                data: incomeDates
             },
             yAxis: {
                 type: 'value'
