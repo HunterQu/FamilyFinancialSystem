@@ -261,72 +261,32 @@
                 <br>
                 <h3 style="text-align: center;">月度账单分析</h3>
                 <br>
+                 <div class="d-flex justify-content-center align-items-center">
+                <form method="POST" action="{% url 'index' %}#info" class="form-inline">
+                     {% csrf_token %}
+                    <div class="form-group mb-2">
+                        <label for="year" class="mr-2">选择年份:</label>
+                        <select class="custom-select mr-3" id="year" name="year">
+                            {% for y in year_range %}
+                            <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                <style>
-                /* 卡片1的渐变背景颜色 */
-                .card-gradient-1 {
-                    background: linear-gradient(to top, #30cfd0 0%, #330867 100%);
-                    color: white;
-                    transition: transform 0.35s ease-in-out;
-                }
+                        <div class="form-group mb-2">
+                            <label for="month" class="mr-2">选择月份:</label>
+                            <select class="custom-select mr-3" id="month" name="month">
+                                {% for m in month_range %}
+                                <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>{{ m }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-                /* 卡片2的渐变背景颜色 */
-                .card-gradient-2 {
-                    background-image: linear-gradient(to right, #eea2a2 0%, #bbc1bf 19%, #57c6e1 42%, #b49fda 79%, #7ac5d8 100%);
-                    color: white;
-                    transition: transform 0.35s ease-in-out;
-                }
-                .card-gradient-3 {
-                    background: linear-gradient(120deg, #CBBACC 0%, #2580B3 100%); /* 渐变从橙色到红色 */
-                    color: white;
-                    transition: transform 0.35s ease-in-out;
-                }
-                    .card-gradient-1:hover,
-                    .card-gradient-2:hover,
-                    .card-gradient-3:hover {
-                    transform: scale(1.06); /* 鼠标悬停时放大卡片 */
-                }
-                .card-gradient-4 {
-                    background: linear-gradient(to right, #8baaaa, #ae8b9c);
-                    color: white;
-                    transition: transform 0.35s ease-in-out;
-                }
-                .card-gradient-4:hover {
-                    transform: scale(1.06); /* 鼠标悬停时放大卡片 */
-                .card-link {
-                    color: #cddc39;
-                }
-
-                .card-link:hover {
-                    color: #a8c731;
-                }
-    </style>
-         <div class="d-flex justify-content-center align-items-center">
-        <form method="POST" action="{% url 'index' %}#info" class="form-inline">
-             {% csrf_token %}
-            <div class="form-group mb-2">
-                <label for="year" class="mr-2">选择年份:</label>
-                <select class="custom-select mr-3" id="year" name="year">
-                    {% for y in year_range %}
-                    <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-                <div class="form-group mb-2">
-                    <label for="month" class="mr-2">选择月份:</label>
-                    <select class="custom-select mr-3" id="month" name="month">
-                        {% for m in month_range %}
-                        <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>{{ m }}</option>
-                        {% endfor %}
-                    </select>
+                        <div class="form-group mb-2">
+                            <button type="submit" id="analyze-button" class="btn btn-info">分析</button>
+                        </div>
+                    </form>
                 </div>
-
-            <div class="form-group mb-2">
-                <button type="submit" id="analyze-button" class="btn btn-info">分析</button>
-            </div>
-        </form>
-    </div>
                         <div class="container p-1">
                     <div class="card shadow card-gradient-3 mb-3">
                         <div class="card-body">
