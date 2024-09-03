@@ -13,6 +13,8 @@ from django.contrib.auth import authenticate, logout
 from django.utils.timezone import now
 from datetime import timedelta
 from django.contrib import messages
+from django.db.models.functions import ExtractMonth
+from decimal import Decimal
 
 
 #注册
@@ -108,13 +110,37 @@ def index(request):
             current_month = today.month
 
             # 获取用户选择的年份和月份（默认为当前年份和月份）
-            selected_year = int(request.GET.get('year', current_year))
-            selected_month = int(request.GET.get('month', current_month))
+            selected_year = int(request.POST.get('year', current_year))
+            selected_month = int(request.POST.get('month', current_month))
 
             # 生成年份范围，例如过去5年到未来5年
-            year_range = range(current_year - 5, current_year + 1)
-            # 生成月份范围
-            month_range = range(1, 13)
+            year_range = range(current_year - 3, current_year + 1)
+            # 获取用户有收支记录的月份，并去重
+            available_months = HistoryRecord.objects.filter(
+                username=cur_user,
+                time_of_occurrence__year=selected_year,
+            ).annotate(
+                month=ExtractMonth('time_of_occurrence')
+            ).values_list(
+                'month', flat=True
+            ).distinct()
+
+            # 将结果转换为有序的唯一月份列表
+            month_range = sorted(set(available_months))
+            # 计算有支出记录的月份数量
+            months_with_expense_count = available_months.count()
+
+            # 计算全年总支出
+            year_total_expense = HistoryRecord.objects.filter(
+                username=cur_user,
+                category__category_type="expense",
+                time_of_occurrence__year=selected_year
+            ).aggregate(total=Sum('amount'))['total'] or 0
+
+            # 计算平均月支出（只考虑有支出记录的月份）
+            average_monthly_expense = year_total_expense / months_with_expense_count if months_with_expense_count > 0 else 0
+
+
 
             # 获取当前用户
             cur_user = NormalUser.objects.filter(name=request.user)[0]
@@ -125,7 +151,12 @@ def index(request):
                 time_of_occurrence__year=selected_year,
                 time_of_occurrence__month=selected_month
             ).order_by("-time_of_occurrence")
-
+            selected_month_expense = HistoryRecord.objects.filter(
+                username=cur_user,
+                category__category_type="expense",
+                time_of_occurrence__year=selected_year,
+                time_of_occurrence__month=selected_month
+            ).aggregate(total=Sum('amount'))['total'] or 0
             # 获取所有账户和货币
             all_accounts = Account.objects.filter(owner=cur_user)
             currencies = Currency.objects.all()
@@ -136,8 +167,51 @@ def index(request):
                 time_of_occurrence__year=selected_year,
                 time_of_occurrence__month=selected_month
             ).order_by("-time_of_occurrence")
+            year_total_expense = Decimal(year_total_expense)
+            selected_month_expense = Decimal(selected_month_expense)
 
-        food_category_name = "饮食"
+            # 计算包含支出记录的月份数
+            months_with_expense_count = Decimal(months_with_expense_count)
+
+            # 计算平均月支出，仅处理有支出记录的月份
+            average_monthly_expense = Decimal(year_total_expense / months_with_expense_count)
+        if selected_month_expense > average_monthly_expense * Decimal('1.3'):
+            # 查找当前月份支出占比最高的分类
+            highest_expense_category = HistoryRecord.objects.filter(
+                username=cur_user,
+                category__category_type="expense",
+                time_of_occurrence__year=selected_year,
+                time_of_occurrence__month=selected_month
+            ).values('category__name').annotate(total=Sum('amount')).order_by('-total').first()
+
+            # 输出超出信息和最高支出分类
+            if highest_expense_category:
+                highest_category_name = highest_expense_category['category__name']
+                highest_category_total = highest_expense_category['total']
+                analysis_result = f"注意！{selected_month}月的支出超出了全年月平均支出的30%。其中，'{highest_category_name}' 是支出最高的分类，金额为 {highest_category_total:.2f} 元。"
+            else:
+                analysis_result = f"注意！{selected_month}月的支出超出了全年月平均支出的30%。"
+
+            # 判断是否为偶然情况还是长期趋势
+            historical_data = HistoryRecord.objects.filter(
+                username=cur_user,
+                category__category_type="expense",
+                time_of_occurrence__month=selected_month
+            ).exclude(time_of_occurrence__year=selected_year).aggregate(total=Sum('amount'))['total'] or 0
+
+            # 计算历史月平均支出
+            historical_average_expense = historical_data / months_with_expense_count if months_with_expense_count > 0 else 0
+
+            if historical_average_expense > average_monthly_expense:
+                persistence_analysis = "当前支出异常可能是一个长期趋势，建议进一步审查财务计划。"
+            else:
+                persistence_analysis = "当前支出异常可能是偶然事件，无需过度担忧。"
+
+        else:
+            analysis_result = f"{selected_month}月的支出在正常范围内，没有明显超出全年月平均支出的情况。"
+            persistence_analysis = ""
+
+        food_category_name = "餐饮"
         first_day_of_month = datetime.date(selected_year, selected_month, 1)
         # 获取下个月的第一天
         first_day_of_next_month = (first_day_of_month + timedelta(days=32)).replace(day=1)
@@ -216,13 +290,13 @@ def index(request):
             education_expense_ratio = 0.00
         # 教育支出评价
         if education_expense_ratio > 30:
-            education_evaluation = "你在教育上的投资比例较高，展现了你对教育的重视。尽管这将有助于提升长期的生活质量，但请注意平衡其他必要的开支。"
+            education_evaluation = "你在教育上的投资如春雨般滋润着未来的土壤，虽然这份心血会让今日的负担稍重，但明日的繁花必将盛开，愿你平衡好人生中的各色花朵。"
         elif 20 < education_expense_ratio <= 30:
-            education_evaluation = "你的教育支出较为合理，既体现了你对未来的信心，也保持了日常生活的平衡。"
+            education_evaluation = "你的教育支出恰如其分，既如阳光般温暖了未来的希望，也让今日的生活依旧安稳，愿你在平衡中走出属于自己的幸福之路。"
         elif 10 < education_expense_ratio <= 20:
-            education_evaluation = "你在教育上的投入比例偏低，虽然这让你有更多的资金用于其他方面，但适当增加教育投资或许会带来更大的长期回报。"
+            education_evaluation = "你在教育上的投入略显薄弱，如同温和的风掠过原野，虽无大碍，却失去了播种繁荣的契机，适度加大投入，或许未来会为你展现更加广阔的蓝天。"
         else:
-            education_evaluation = "你的教育支出比例极低，这可能会影响个人和家庭的长远发展，建议适当增加对教育的投入。"
+            education_evaluation = "你的教育支出如晨露般稀少，虽能滋润片刻，却难以长久供养生命的成长，建议适当增添这片土地上的雨露，让未来的希望之树得以茁壮成长。"
 
         # 获取车贷和房贷的支出记录
         car_loan_expense_records = expense_records.filter(
@@ -265,6 +339,8 @@ def index(request):
             'month_range': month_range,
             'selected_year': selected_year,
             'selected_month': selected_month,
+            'analysis_result': analysis_result,
+            'persistence_analysis': persistence_analysis,
             'transfer_records': transfer_records,
             'accounts': all_accounts,
             'currencies': currencies,

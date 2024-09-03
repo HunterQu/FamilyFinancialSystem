@@ -302,7 +302,8 @@
                 }
     </style>
          <div class="d-flex justify-content-center align-items-center">
-        <form method="GET" action="{% url 'index' %}" class="form-inline">
+        <form method="POST" action="{% url 'index' %}#info" class="form-inline">
+             {% csrf_token %}
             <div class="form-group mb-2">
                 <label for="year" class="mr-2">选择年份:</label>
                 <select class="custom-select mr-3" id="year" name="year">
@@ -312,21 +313,28 @@
                 </select>
             </div>
 
-            <div class="form-group mb-2">
-                <label for="month" class="mr-2">选择月份:</label>
-                <select class="custom-select mr-3" id="month" name="month">
-                    {% for m in month_range %}
-                    <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>{{ m }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+                <div class="form-group mb-2">
+                    <label for="month" class="mr-2">选择月份:</label>
+                    <select class="custom-select mr-3" id="month" name="month">
+                        {% for m in month_range %}
+                        <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>{{ m }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
             <div class="form-group mb-2">
-                <button type="submit" class="btn btn-info">分析</button>
+                <button type="submit" id="analyze-button" class="btn btn-info">分析</button>
             </div>
         </form>
     </div>
-
+                        <div class="container p-1">
+                    <div class="card shadow card-gradient-3 mb-3">
+                        <div class="card-body">
+                            <h4 class="card-title">收支平衡分析</h4>
+                            <p class="card-text">{{ suggestion|safe }} <br>{{analysis_result}}<br>{{persistence_analysis}}</p>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="container p-1">
                     <div class="card shadow shadow card-gradient-1 mb-3">
@@ -346,14 +354,7 @@
                     </div>
                 </div>
 
-                <div class="container p-1">
-                    <div class="card shadow card-gradient-3 mb-3">
-                        <div class="card-body">
-                            <h4 class="card-title">收支平衡分析</h4>
-                            <p class="card-text">{{ suggestion|safe }}</p>
-                        </div>
-                    </div>
-                </div>
+
                 <div class="container p-1">
                     <div class="card shadow card-gradient-2 mb-3">
                         <div class="card-body">
@@ -427,6 +428,7 @@
 <script>$.ajaxSetup({headers: {"X-CSRFToken": '{{ csrf_token }}'}});</script>
 <script>
     $(function () {
+        document.querySelector('body').classList.add('no-scroll');
         var init_ie_type = 'expense'
         var init_category_type = '餐饮'
         $("#ie-type-list").find(`option[value=${init_ie_type}]`).attr("selected", true);
@@ -730,5 +732,23 @@
                 $("#top-container").attr("class", "container-fluid");
         });
     })
+</script>
+<script>
+    // Activate the tab based on the URL hash when the page loads
+    $(document).ready(function() {
+        // Get the current hash
+        var hash = window.location.hash;
+        if (hash) {
+            $('.nav-link[href="' + hash + '"]').tab('show');
+        }
+    });
+
+    // Update the URL when a tab is clicked
+    $('.nav-link').on('click', function(e) {
+        // Get the href attribute value
+        var href = $(this).attr('href');
+        // Update the browser's URL without refreshing the page
+        window.location.hash = href;
+    });
 </script>
 </html>
