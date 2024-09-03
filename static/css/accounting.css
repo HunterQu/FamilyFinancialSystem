@@ -3,7 +3,53 @@
 }
 
 .nav-forms {
+    padding: 10px 20px; /* 设置上下和左右的内边距 */
+    border-radius: 10px; /* 设置圆角 */
+    margin: 0 5px; /* 设置左右间距 */
+    text-align: center; /* 文字居中对齐 */
+    display: inline-block; /* 使链接成为块状元素，便于设置宽度和高度 */
+    background: rgba(255, 255, 255, 0.4); /* 白色背景，带有透明度 */
+    color: #676767;
+    backdrop-filter: blur(10px); /* 毛玻璃效果，数值越大模糊度越高 */
+    -webkit-backdrop-filter: blur(10px); /* Safari 支持 */
+    transition: transform 0.35s ease-in-out, box-shadow 0.35s ease-in-out;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* 轻微阴影 */
+}
 
+.nav-forms:hover {
+    background-color: #007bff; /* 鼠标悬停时更改背景颜色 */
+    color: #fff; /* 鼠标悬停时更改字体颜色 */
+    text-decoration: none; /* 去掉下划线 */
+}
+
+.nav-link.active.nav-forms {
+    background-color: #007bff; /* 激活状态下的背景颜色 */
+    color: #fff; /* 激活状态下的字体颜色 */
+}
+
+.nav-forms-logout {
+    padding: 10px 20px; /* 设置上下和左右的内边距 */
+    border-radius: 10px; /* 设置圆角 */
+    margin: 0 5px; /* 设置左右间距 */
+    text-align: center; /* 文字居中对齐 */
+    display: inline-block; /* 使链接成为块状元素，便于设置宽度和高度 */
+    background: rgba(241, 51, 51, 0.4); /* 白色背景，带有透明度 */
+    color: #ffffff;
+    backdrop-filter: blur(10px); /* 毛玻璃效果，数值越大模糊度越高 */
+    -webkit-backdrop-filter: blur(10px); /* Safari 支持 */
+    transition: transform 0.35s ease-in-out, box-shadow 0.35s ease-in-out;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* 轻微阴影 */
+}
+
+.nav-forms-logout:hover {
+    background-color: #ff0059; /* 鼠标悬停时更改背景颜色 */
+    color: #fff; /* 鼠标悬停时更改字体颜色 */
+    text-decoration: none; /* 去掉下划线 */
+}
+
+.nav-link.active.nav-forms-logout {
+    background-color: #ff0059; /* 激活状态下的背景颜色 */
+    color: #fff; /* 激活状态下的字体颜色 */
 }
 
 body {
@@ -225,6 +271,24 @@ body::before {
     max-height: 500px;
 }
 
+#charts .left-card-1,
+#charts .left-card-2,
+#charts .left-card-3,
+#charts .right-card-1,
+#charts .right-card-2 {
+    background: rgba(255, 255, 255, 0.4); /* 白色背景，带有透明度 */
+    color: black;
+    padding: 20px;
+    border-radius: 10px;
+    backdrop-filter: blur(10px); /* 毛玻璃效果，数值越大模糊度越高 */
+    -webkit-backdrop-filter: blur(10px); /* Safari 支持 */
+    transition: transform 0.35s ease-in-out, box-shadow 0.35s ease-in-out;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* 轻微阴影 */
+    will-change: transform; /* 优化渲染 */
+    backface-visibility: hidden; /* 处理模糊问题 */
+    max-height: 500px;
+}
+
 #home .left-card-3-1,
 #home .left-card-3-2 {
     background: rgba(255, 255, 255, 0.4); /* 白色背景，带有透明度 */
@@ -240,13 +304,14 @@ body::before {
 }
 
 /* 悬停时的放大效果和阴影 */
-#home .left-card-1:hover,
+#home .left-card-1:hover
 /*
 #home .left-card-2:hover,
 #home .left-card-3:hover,
 #home .right-card-1:hover,
-*/
-#home .right-card-2:hover {
+
+#home .right-card-2:hover */
+{
     transform: scale(1.05);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
