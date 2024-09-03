@@ -403,6 +403,7 @@ def charts_view(request):
     # 获取用户选择的收入和支出类别（可以是多个类别）
     selected_income_categories = request.GET.getlist('income_categories')
     selected_expense_categories = request.GET.getlist('expense_categories')
+    selected_user = request.GET.getlist('all_username')
 
     # 处理类别参数（将字符串 ID 转换为整数列表）
     income_category_ids = [int(id) for id in selected_income_categories if id]
@@ -465,8 +466,6 @@ def charts_view(request):
     # 获取所有收入和支出类别
     all_income_categories = Category.objects.filter(category_type="income")
     all_expense_categories = Category.objects.filter(category_type="expense")
-    all_categories = Category.objects.filter(Q(category_type="income") | Q(category_type="expense"))
-    all_users = NormalUser.objects.all()
 
     context = {
         'income_dates': all_dates,
@@ -480,8 +479,6 @@ def charts_view(request):
         'all_expense_categories': all_expense_categories,
         'selected_income_categories': selected_income_categories,
         'selected_expense_categories': selected_expense_categories,
-        'all_categories' :all_categories,
-        'all_users': all_users
     }
 
     return render(request, 'accounting/charts.html', context)

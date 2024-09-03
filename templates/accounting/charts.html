@@ -65,14 +65,15 @@
                     <option value="30" {% if days == 30 %}selected{% endif %}>近30天</option>
                 </select>
             </div>
-
         <div class="form-group mb-3 w-100">
             <label class="mr-2">选择收入类别:</label><br>
             {% for category in all_income_categories %}
-            <div class="form-check form-check-inline form-switch">
-                <input type="checkbox" class="form-check-input" id="incomeCategory{{ category.id }}" name="income_categories" value="{{ category.id }}"
-                    checked>
-                <label class="form  -check-label" for="incomeCategory{{ category.id }}">{{ category.name }}</label>
+            <div class="form-check form-check-inline">
+                <label class="form-check-label">
+                    <input type="checkbox" class="form-check-input" name="income_categories" value="{{ category.id }}"
+                        {% if category.id|stringformat:"s" in selected_income_categories %}checked{% endif %}>
+                    {{ category.name }}
+                </label>
             </div>
             {% endfor %}
         </div>
@@ -80,26 +81,18 @@
         <div class="form-group mb-3 w-100">
             <label class="mr-2">选择支出类别:</label><br>
             {% for category in all_expense_categories %}
-            <div class="form-check form-check-inline form-switch">
-                <input type="checkbox" class="form-check-input" id="expenseCategory{{ category.id }}" name="expense_categories" value="{{ category.id }}"
-                    checked>
-                <label class="form-check-label" for="expenseCategory{{ category.id }}">{{ category.name }}</label>
+            <div class="form-check form-check-inline">
+                <label class="form-check-label">
+                    <input type="checkbox" class="form-check-input" name="expense_categories" value="{{ category.id }}"
+                        {% if category.id|stringformat:"s" in selected_expense_categories %}checked{% endif %}>
+                    {{ category.name }}
+                </label>
             </div>
             {% endfor %}
         </div>
-        <div class="form-group mb-3 w-100">
-            <label class="mr-2">选择人员:</label><br>
-            {% for user in all_users %}
-            <div class="form-check form-check-inline form-switch">
-                <input type="checkbox" class="form-check-input" id="username{{ user.id }}" name="all_username" value="{{ user.id }}"
-                    checked>
-                <label class="form-check-label" for="username{{ user.id }}">{{ user.name }}</label>
-            </div>
-            {% endfor %}
+        <div class="form-group mb-3 w-100 text-center">
+            <button type="submit" class="btn btn-primary btn-lg">应用筛选</button>
         </div>
-            <div class="form-group mb-3 w-100 text-center">
-                <button type="submit" class="btn btn-primary btn-lg">应用筛选</button>
-            </div>
         </form>
     </div>
     </div>
