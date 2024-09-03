@@ -465,6 +465,8 @@ def charts_view(request):
     # 获取所有收入和支出类别
     all_income_categories = Category.objects.filter(category_type="income")
     all_expense_categories = Category.objects.filter(category_type="expense")
+    all_categories = Category.objects.filter(Q(category_type="income") | Q(category_type="expense"))
+    all_users = NormalUser.objects.all()
 
     context = {
         'income_dates': all_dates,
@@ -477,7 +479,9 @@ def charts_view(request):
         'all_income_categories': all_income_categories,
         'all_expense_categories': all_expense_categories,
         'selected_income_categories': selected_income_categories,
-        'selected_expense_categories': selected_expense_categories
+        'selected_expense_categories': selected_expense_categories,
+        'all_categories' :all_categories,
+        'all_users': all_users
     }
 
     return render(request, 'accounting/charts.html', context)
