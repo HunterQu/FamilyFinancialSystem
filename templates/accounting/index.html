@@ -16,31 +16,33 @@
     <script src="{% static 'js/popper.min.js' %}"></script>
     <script src="{% static 'js/jquery.datetimepicker.full.min.js' %}"></script>
     <title>记录收支</title>
+
 </head>
+
 <body>
     {% if user.is_authenticated %}
-    <div class="container" id="top-container">
-        <ul class="nav nav-pills justify-content-center" role="tablist">
+    <div class="container-fluid" id="top-container">
+        <ul class="nav nav-pills justify-content-around bottom-nav d-flex m-0 w-100" role="tablist">
             <li class="nav-item">
-                <a class="nav-link active nav-forms" data-toggle="tab" href="#home" id="home-nav">记账</a>
+                <a class="nav-link active " data-toggle="tab" href="#home" id="home-nav">记账</a>
             </li>
             <li class="nav-item">
 <!--                <a class="nav-link nav-forms" data-toggle="tab" href="#charts" >图表</a>-->
-                <a class="nav-link nav-forms" href="charts/" id="charts">图表</a>
+                <a class="nav-link " href="charts/" id="charts">图表</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link nav-forms" data-toggle="tab" href="#info" id="info-nav">分析</a>
+                <a class="nav-link " data-toggle="tab" href="#info" id="info-nav">分析</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link nav-forms" data-toggle="tab" href="#worker" id="worker-nav">关于</a>
+                <a class="nav-link " data-toggle="tab" href="#worker" id="worker-nav">关于</a>
             </li>
             {% if user.is_superuser %}
             <li class="nav-item">
-                <a class="nav-link nav-forms" href="/admin/accounting/" id="admin-nav">管理</a>
+                <a class="nav-link " href="/admin/accounting/" id="admin-nav">管理</a>
             </li>
             {% endif %}
             <li class="nav-item">
-                <a class="nav-link nav-forms-logout" href="logout/" id="logout">注销</a>
+                <a class="nav-link " href="logout/" id="logout">注销</a>
             </li>
         </ul>
 
@@ -134,7 +136,8 @@
                                                 <a class="btn btn-block btn-info my-2 my-sm-0 btn-left-3-1-2" href="/accounting">回到主页</a>
                                             </div>
                                         </div>
-                                </div>
+                                </div>5
+                            
                                 <br>
                                 <div class="card border-0 shadow left-card-3-2" id="left-card-3-2">
                                     <div class="form-row">
